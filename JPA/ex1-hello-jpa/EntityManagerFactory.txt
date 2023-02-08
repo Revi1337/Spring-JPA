@@ -1,0 +1,28 @@
+// EntityManagerFactory, EntityManagerManager
+- EntityManagerFactory 는 서버가 올라오는 시점에 하나만 생성하는 것임을 주의.
+- EntityManagerManager 는 고객의 요청이 올때마다 계속 썻다가 버렸다가 반복해야함. --> 스레드간에 공유를 절대 금지.
+- JPA 의 모든 데이터 변경은 트랜잭션 안에서 실행해야함.
+
+
+// JPQL
+- JPA 는 SQL 을 추상화한 JPQL 이라는 "객체지향 쿼리언어" 를 제공
+  JPA 를 사용하면 엔티티 중심으로 개발하게 됨. 문제는 검색쿼리임.
+  검색을 할때도 테이블이 아닌 엔티티 객체를 대상으로 검색
+  모든 DB 데이터를 객체로 변환해서 검색하는 것은 불가능
+  애플리케이션이 필요한 데이터만 DB 에서 불러오려면 결국에는 검색 조건이 포함된 SQL 이 필요함.
+  실제 RDB 의 테이블에 쿼리를 날리면 해당 DB 에 종속적으로 설계가 됨.
+  그래서, 객체를 대상으로 쿼리를 할 수 있는 JPQL 이 제공되는 것임.
+- SQL 문법과 유사, SELECT, FROM, WHERE, GROUP BY, HAVING, JOIN 지원
+- JPQL 은 엔티티 객체를 대상으로 쿼리 --> 방언을 바꾸거나 해도 JPQL 을 변경하지 않아도 됨.
+- SQL 은 데이터베이스 테이블을 대상으로 쿼리
+* 즉, JPQL 은 테이블이 아닌 객체를 대상으로 검색하는 객체지향 쿼리이며, SQL 을 추상화해서 특정 데이터베이스 SQL 에 의존하지 않음. (방언에서 자유로움)
+  JPQL 을 한마디로 정의하면 객체지향 SQL 인 것임.
+
+// 정리
+* JPA 는 항상 EntityManagerFactory 라는것을 만들어야 한다. (EntityManagerFactory 는  DB 당 하나씩 묶여서 돌아가는 것임.)
+* Persistence.createEntityManagerFactory() 의 인자에는 persistence.xml 파일의 unit 이름을 넣어주는것이다.
+* JPA 는 고객의 요청이 올때마다 EntityManagerFactory 의 EntityManager 를 통해서  작업해야한다.
+* JPA 에서 모든 데이터 변경은 트랜잭션 안에서 수행되어야한다.
+* 로직이 끝나면 EntityManagerManager 에서 commit() 를 꼭해야함. 해주지않으면 로직이수행되도 반영이 되지않음.
+* EntityManagerManager 를 다쓰면 close() 해주어야 한다.
+* WAS 이 내려갈떄 EntityManagerFactory 를 닫아주어야한다. (리소스 릴리즈)
