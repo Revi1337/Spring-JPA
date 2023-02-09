@@ -15,6 +15,7 @@
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.use_sql_comments" value="true"/>
+            <!--<property name="hibernate.jdbc.batch_size" value="10"/>     &lt;!&ndash; 사이즈 만큼 쓰기지연 쿼리저장소에 모아서 커밋침 (버퍼링과도 같은 기능)&ndash;&gt;-->
             <!--<property name="hibernate.hbm2ddl.auto" value="create" />-->
         </properties>
     </persistence-unit>
