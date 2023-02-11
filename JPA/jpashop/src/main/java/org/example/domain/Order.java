@@ -2,14 +2,26 @@ package org.example.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity @Table(name = "ORDERS")
 public class Order {
 
     @Id @GeneratedValue @Column(name = "ORDER_ID") private Long id;
-    @Column(name = "MEMBER_ID") private Long memberId;
+
+    @ManyToOne @JoinColumn(name = "MEMBER_ID") private Member member;
+
     private LocalDateTime orderDate;
+
     @Enumerated(value = EnumType.STRING) private OrderStatus status;
+
+    @OneToMany(mappedBy = "item") private List<OrderItem> orderItems = new ArrayList<>(); // TODO 연관관계의 주인은 OrderItem 의 item 필드
+
+    public void addOrderItem(OrderItem orderItem) { // TODO 양방향 편의 메서드
+        orderItems.add(orderItem);
+        orderItem.setOrder(this);
+    }
 
     public Long getId() {
         return id;
@@ -19,12 +31,12 @@ public class Order {
         this.id = id;
     }
 
-    public Long getMemberId() {
-        return memberId;
+    public Member getMember() {
+        return member;
     }
 
-    public void setMemberId(Long memberId) {
-        this.memberId = memberId;
+    public void setMember(Member member) {
+        this.member = member;
     }
 
     public LocalDateTime getOrderDate() {
@@ -42,4 +54,5 @@ public class Order {
     public void setStatus(OrderStatus status) {
         this.status = status;
     }
+
 }
