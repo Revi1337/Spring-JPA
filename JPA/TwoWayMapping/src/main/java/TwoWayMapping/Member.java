@@ -12,7 +12,7 @@ public class Member {
     private String username;
 
     @ManyToOne @JoinColumn(name = "TEAM_ID")
-    private Team team;
+    private Team team;      // TODO 이놈이 주인이라는 거임.
 
     public Long getId() {
         return id;
