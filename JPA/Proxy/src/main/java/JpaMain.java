@@ -43,8 +43,8 @@ public class JpaMain {
 //            System.out.println("mem1 == mem2 : " + (mem1.getClass() == mem2.getClass()));
 //            System.out.println("mem2's Parent is Member? : " + (mem2 instanceof Member));
 
-            // TODO (프록시의 특징) 영속성 컨텍스트에 찾는 엔티티가 이미 있으면 em.getReference() 를 호출해도 실제엔티티 반환함.
-//            Member findMember = entityManager.getReference(Member.class, member.getId());
+            // TODO (프록시의 특징) 영속성 컨텍스트에 찾는 엔티티가 이미 있으면 em.getReference() 를 호출해도 실제엔티티 반환함. (동일한 트랜잭션에서 영속성 컨텍스트의 기능 중 동일성 보장을 위해 참조값을 그대로 유지되어야 하기 때문에, 프록시로 조회했으면 프록시로, 엔티티로 조회했으면 엔티티로 반환)
+//            Member findMember = entityManager.getReference(Member.class, member1.getId());
 //            System.out.println("findMember.class = " + findMember.getClass().getName());
 
             // TODO (프록시의 특징) 영속성 컨텍스트의 도움을 받을 수 없는 준영속 상태일때, 프록시를 초기호하면 문제발생 (이놈 ㅈㄴ 중요 - LazyInitializationException)
