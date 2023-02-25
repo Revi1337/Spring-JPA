@@ -64,3 +64,12 @@ ORACLE : ROW NUM 3Depth
  SELECT m FROM Member m LEFT [OUTER] JOIN m.team t
 3. 세타 조인:
  SELECT count(m) from Member m, Team t where m.username=t.name
+4. ON 절 조인 (JPA 2.1 부터 지원)
+    - ON 절을 활용한 조인 (조인 대상 필터링 가능) --> 예) Member 과 Team 을 조인하면서, Team 이름이 A 인 팀만 조인
+        JPQL : SELECT m, t FROM Member m LEFT JOIN m.team t on t.name = 'A'
+        SQL : SELECT m.*, t.* FROM Member m LEFT JOIN Team t ON m.TEAM_ID=t.id and t.name='A'
+    - 조인 대상 필터링
+    - 연관관계가 없는 엔티티 외부 조인 가능 (Hibernate 5.1 부터) --> 예) Member 의 이름과 Team 의 이름이 같은 대상 외부 조인
+        JPQL : SELECT m, t FROM Member m LEFT JOIN Team t on m.username = t.name
+        SQL : SELECT m.*, t.* FROM Member m LEFT JOIN Team t ON m.username = t.name
+

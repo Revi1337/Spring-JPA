@@ -14,9 +14,14 @@ public class JpaMain {
         EntityTransaction entityTransaction = entityManager.getTransaction();
         entityTransaction.begin();
         try {
+            Team team = new Team();
+            team.setName("teamA");
+            entityManager.persist(team);
+
             Member member = new Member();
             member.setUsername("member1");
             member.setAge(10);
+            member.setTeam(team);
             entityManager.persist(member);
 
             // TODO TypeQuery, Query
@@ -90,7 +95,6 @@ public class JpaMain {
 //            System.out.println("memberDto = " + memberDto.getUsername());
 //            System.out.println("memberDto = " + memberDto.getAge());
 
-
             // TODO 페이징 API
 //            for (int i = 2; i < 100; i++) {
 //                Member member1 = new Member();
@@ -108,6 +112,33 @@ public class JpaMain {
 //            for (Member member1 : resultList) {
 //                System.out.println("member1 = " + member1);
 //            }
+
+            // TODO Join
+            // --- inner join --- (inner 는 생략 가능)
+//            entityManager.flush();
+//            entityManager.clear();
+//            entityManager.createQuery("select m from Member as m inner join m.team t").getResultList(); // inner join 으로 t 를 가져왔기때문에, t 를 사용해짐.
+            // --- left outer join --- (outer 는 생략 가능)
+//            entityManager.flush();
+//            entityManager.clear();
+//            entityManager.createQuery("select m from Member as m left join m.team t", Member.class).getResultList();
+            // --- cross join --- (일명 세타조인 = 막조인)
+//            entityManager.flush();
+//            entityManager.clear();
+//            String query = "select m from Member as m, Team t where m.username = t.name";
+//            List<Member> resultList = entityManager.createQuery(query, Member.class).getResultList();
+//            System.out.println("resultList = " + resultList.size());
+            // --- ON join ---
+            entityManager.flush();
+            entityManager.clear();
+            String query1 = "select m from Member as m left outer join m.team t on t.name = 'teamA'"; // 조인 대상 필터링
+            List<Member> resultList = entityManager.createQuery(query1, Member.class).getResultList();
+            entityManager.flush();
+            entityManager.clear();
+            String query2 = "select m from Member as m left outer join Team t on m.username = t.name"; // 연관관계가 없는 엔티티 외부 조인
+            List<Member> resultList2 = entityManager.createQuery(query2, Member.class).getResultList();
+
+
 
             entityTransaction.commit();
         } catch (Exception e) {

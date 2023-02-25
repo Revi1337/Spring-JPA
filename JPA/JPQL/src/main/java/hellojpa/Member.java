@@ -22,6 +22,12 @@ public class Member {
 //    @OneToMany(mappedBy = "member")
 //    private List<Order> orders = new ArrayList<>();
 
+    // 연관관계 편의 메서드
+    public void changeTeam(Team team) {
+         this.team = team;
+         team.getMembers().add(this);
+    }
+
     public Long getId() {
         return id;
     }
