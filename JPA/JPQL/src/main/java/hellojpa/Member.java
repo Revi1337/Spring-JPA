@@ -19,6 +19,12 @@ public class Member {
     @JoinColumn(name = "TEAM_ID")
     private Team team;
 
+    @Enumerated(value = EnumType.STRING)
+    private MemberType type;
+
+    public void setType(MemberType type) {
+        this.type = type;
+    }
 //    @OneToMany(mappedBy = "member")
 //    private List<Order> orders = new ArrayList<>();
 

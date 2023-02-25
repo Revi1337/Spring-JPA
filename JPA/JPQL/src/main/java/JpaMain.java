@@ -1,5 +1,6 @@
 import hellojpa.Address;
 import hellojpa.Member;
+import hellojpa.MemberType;
 import hellojpa.Team;
 import hellojpa.dto.MemberDto;
 import jakarta.persistence.*;
@@ -22,6 +23,7 @@ public class JpaMain {
             member.setUsername("member1");
             member.setAge(10);
             member.setTeam(team);
+            member.setType(MemberType.ADMIN);
             entityManager.persist(member);
 
             // TODO TypeQuery, Query
@@ -129,15 +131,24 @@ public class JpaMain {
 //            List<Member> resultList = entityManager.createQuery(query, Member.class).getResultList();
 //            System.out.println("resultList = " + resultList.size());
             // --- ON join ---
-            entityManager.flush();
-            entityManager.clear();
-            String query1 = "select m from Member as m left outer join m.team t on t.name = 'teamA'"; // 조인 대상 필터링
-            List<Member> resultList = entityManager.createQuery(query1, Member.class).getResultList();
-            entityManager.flush();
-            entityManager.clear();
-            String query2 = "select m from Member as m left outer join Team t on m.username = t.name"; // 연관관계가 없는 엔티티 외부 조인
-            List<Member> resultList2 = entityManager.createQuery(query2, Member.class).getResultList();
+//            entityManager.flush();
+//            entityManager.clear();
+//            String query1 = "select m from Member as m left outer join m.team t on t.name = 'teamA'"; // 조인 대상 필터링
+//            List<Member> resultList = entityManager.createQuery(query1, Member.class).getResultList();
+//            entityManager.flush();
+//            entityManager.clear();
+//            String query2 = "select m from Member as m left outer join Team t on m.username = t.name"; // 연관관계가 없는 엔티티 외부 조인
+//            List<Member> resultList2 = entityManager.createQuery(query2, Member.class).getResultList();
 
+            // TODO JPQL Type Expression
+            // 반환값이 3개 (모두 Object 타입으로 반환), Enum 인 hellojpa.MemberType.ADMIN 은 보통 파라미터바인딩으로 사용함
+            String query = "select m.username, 'Hello', TRUE from Member as m" + " where m.type = hellojpa.MemberType.ADMIN";
+            List<Object[]> result = entityManager.createQuery(query).getResultList();
+            for (Object[] objects : result) {
+                System.out.println("objects = " + objects[0]);
+                System.out.println("objects = " + objects[1]);
+                System.out.println("objects = " + objects[2]);
+            }
 
 
             entityTransaction.commit();
