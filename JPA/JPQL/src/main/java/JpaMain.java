@@ -142,14 +142,27 @@ public class JpaMain {
 
             // TODO JPQL Type Expression
             // 반환값이 3개 (모두 Object 타입으로 반환), Enum 인 hellojpa.MemberType.ADMIN 은 보통 파라미터바인딩으로 사용함
-            String query = "select m.username, 'Hello', TRUE from Member as m" + " where m.type = hellojpa.MemberType.ADMIN";
-            List<Object[]> result = entityManager.createQuery(query).getResultList();
-            for (Object[] objects : result) {
-                System.out.println("objects = " + objects[0]);
-                System.out.println("objects = " + objects[1]);
-                System.out.println("objects = " + objects[2]);
-            }
+//            entityManager.flush();
+//            entityManager.clear();
+//            String query = "select m.username, 'Hello', TRUE from Member as m" + " where m.type = hellojpa.MemberType.ADMIN";
+//            List<Object[]> result = entityManager.createQuery(query).getResultList();
+//            for (Object[] objects : result) {
+//                System.out.println("objects = " + objects[0]);
+//                System.out.println("objects = " + objects[1]);
+//                System.out.println("objects = " + objects[2]);
+//            }
 
+            // TODO JPQL 함수
+            // --- JPQL 표준 ---
+//            entityManager.flush();
+//            entityManager.clear();
+////             String query = "select concat('a', 'b') from Member as m";
+////            String query = "select locate('de', 'abcdefg') from Member as m";
+//            String query = "select size(t.members) from Team t";
+//            List<Integer> result = entityManager.createQuery(query).getResultList();
+//            for (Object o : result) {
+//                System.out.println("o = " + o);
+//            }
 
             entityTransaction.commit();
         } catch (Exception e) {
