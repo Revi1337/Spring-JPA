@@ -1,0 +1,43 @@
+// 경로 표현식
+- . 을 찍어 객체의 그래프를 탐색하는 것.
+- 아래와 같이 세가지 경로표현식이있는데, 상태필드로가냐 단일 값 연관 필드로 가냐 컬렉션값 연관 필드로 가냐에 따라 동작하는 쿼리가 달라짐.
+Ex)
+select m.username           --> 상태필드
+    from Member m
+        join m.team t       --> 단일 값 연관 필드
+        join m.orders o     --> 컬렉션값 연관 필드
+where t.name = '팀A'
+
+// 경로 표현식 용어 정리
+- 상태 필드 (state field) : 단순히 값을 저장하기 위한 필드 (ex: m.username)
+- 연관 필드 (association field) : 연관관계를 위한 필드
+    - 단일 값 연관 필드 : @ManyToOne, @OneToOne, 대상이 엔티티 (ex. m.team)
+    - 컬렉션 값 연관 필드 : @OneToMany, @ManyToMany, 대상이 컬렉셔니 (ex: m.orders)
+
+// 경로 표현식 특징
+- 상태필드 : 경로 탐색의 끝, 탐색 X
+- 단일 값 연관 경로 : 묵시적 내부 조인 발생, 탐색 O
+- 컬렉션 값 연관 경로 : 묵시적 내부 조인 발생, 탐색 X
+    FROM 절에서 명시적 조인을 통해 별칭을 얻으면 별칭을 통해 탐색 가능
+
+// 명시적 조인, 묵시적 조인
+- 명시적 join : join 키워드 직접 사용
+    select m from Member as m inner join m.team t
+- 묵시적 join : 경로 표현식에 의해 묵시적으로 SQL 조인 발생 (내부 조인만 가능)
+    select m.team from Member m
+
+// 경로 표현식 예제
+1. select o.member.team from Order o     -> 성공 (단일값 연관. 문제는 묵시적 JOIN 이 두번나감.)
+2. select t.members from Team            -> 성공 (컬렉션값 연관이어서 탐색의 끝임)
+3. select t.members.username from Team t -> 실패 (컬렉션값 연관이어서 t.members 에서 탐색이 끝남. 더 탐색하려면 명시적 join 을 from 절에 선언하여 별칭을 얻고 탐색 가능)
+4. select m.username from Team t join t.members m -> 성공 (컬렉션값 연관이지만, 묵시적 조인이 아닌 from 절에 명시적으로 join 을 선언하여 별칭 m 을 얻었기 때문에, Member 를 탐색이 가능해짐.)
+
+// 경로 탐색을 사용한 묵시적 조인 시 주의사항
+- 항상 내부 조인으로 실행됨.
+- 컬렉션은 경로탐색의 끝이기 때문에, 명시적 조인을 통해 별칭을 얻어야 더 탐색이 가능해짐
+- 경로 탐색은 주로 SELECT, WHERE 절에서 사용하지만, 묵시적 조인으로 인해 SQL 의 FROM (JOIN) 절에 영향을 줌
+
+// 실무조언 - 결론
+- 경로 표현식에서 상태필드를 제외하면 모두 묵시적 JOIN 이 나가기 때문에, 상태필드를 제외하면 모두 명시적 join 을 사용하면 된다.
+- 조인은 SQL 튜닝에 중요한 포인트
+- 묵시적 조인은 조인이 일어나는 상황을 한눈에 파악하기 어려움
