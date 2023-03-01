@@ -8,28 +8,67 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest @Transactional
+@SpringBootTest @Transactional @Rollback(value = false)
 class MemberJpaRepositoryTest {
 
-    private final MemberJpaRepository memberRepository;
+    private final MemberJpaRepository memberJpaRepository;
+    @Autowired
+    private MemberRepository memberRepository;
 
     @Autowired
-    public MemberJpaRepositoryTest(MemberJpaRepository memberRepository) {
-        this.memberRepository = memberRepository;
+    public MemberJpaRepositoryTest(MemberJpaRepository memberJpaRepository) {
+        this.memberJpaRepository = memberJpaRepository;
     }
 
     @Test
     @DisplayName(value = "testMember")
-    @Rollback(value = false)
     public void testMember() throws Exception {
         Member member = new Member("mebmerA");
-        Member savedMember = memberRepository.save(member);
+        Member savedMember = memberJpaRepository.save(member);
 
-        Member findMember = memberRepository.find(savedMember.getId());
+        Member findMember = memberJpaRepository.find(savedMember.getId());
         assertThat(savedMember.getId()).isEqualTo(findMember.getId());
         assertThat(savedMember.getUsername()).isEqualTo(findMember.getUsername());
         assertThat(savedMember).isEqualTo(findMember);
     }
+
+    @Test
+    @DisplayName(value = "basicCRUD")
+    public void basicCRUD() throws Exception {
+        Member member1 = new Member("member1");
+        Member member2 = new Member("member2");
+        memberJpaRepository.save(member1);
+        memberJpaRepository.save(member2);
+
+        // 단건 조회 검증
+        Member findMember1 = memberJpaRepository.findById(member1.getId()).get();
+        Member findMember2 = memberJpaRepository.findById(member2.getId()).get();
+        assertThat(member1).isEqualTo(findMember1);
+        assertThat(member2).isEqualTo(findMember2);
+
+        // 변경감지 (dirty checking)
+        // --> Test 코드에 @Transactional 이 붙으면 rollback 이어서 변경감지가 수행되지 않지만, @Rollback(false) 를 설정하였기 때문에, commit 된다.
+        findMember1.setUsername("member!!");
+        assertThat(findMember1.getUsername()).isEqualTo("member!!").isEqualTo(member1.getUsername());
+
+        // 리스트 조회 검증
+        List<Member> all = memberRepository.findAll();
+        assertThat(all.size()).isEqualTo(2);
+
+        // 카운트 검증
+        long count = memberJpaRepository.count();
+        assertThat(count).isEqualTo(2);
+
+        // 삭제 검증
+        memberJpaRepository.delete(member1);
+        memberJpaRepository.delete(member2);
+        long deletedCount = memberJpaRepository.count();
+        assertThat(deletedCount).isEqualTo(0);
+
+    }
+
 }
