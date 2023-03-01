@@ -16,8 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MemberJpaRepositoryTest {
 
     private final MemberJpaRepository memberJpaRepository;
-    @Autowired
-    private MemberRepository memberRepository;
 
     @Autowired
     public MemberJpaRepositoryTest(MemberJpaRepository memberJpaRepository) {
@@ -56,7 +54,7 @@ class MemberJpaRepositoryTest {
         assertThat(findMember1.getUsername()).isEqualTo("member!!").isEqualTo(member1.getUsername());
 
         // 리스트 조회 검증
-        List<Member> all = memberRepository.findAll();
+        List<Member> all = memberJpaRepository.findAll();
         assertThat(all.size()).isEqualTo(2);
 
         // 카운트 검증
@@ -69,6 +67,20 @@ class MemberJpaRepositoryTest {
         long deletedCount = memberJpaRepository.count();
         assertThat(deletedCount).isEqualTo(0);
 
+    }
+    
+    @Test
+    @DisplayName(value = "DataJPA 의 쿼리메서드를 순수한 JPA 로 구현했을때의 테스트")
+    public void findByUsernameAndAgeGreaterThen() throws Exception {
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("AAA", 20);
+        memberJpaRepository.save(m1);
+        memberJpaRepository.save(m2);
+
+        List<Member> result = memberJpaRepository.findByUsernameAndAgeGreaterThen("AAA", 15);
+        assertThat(result.get(0).getUsername()).isEqualTo("AAA");
+        assertThat(result.get(0).getAge()).isEqualTo(20);
+        assertThat(result.size()).isEqualTo(1);
     }
 
 }

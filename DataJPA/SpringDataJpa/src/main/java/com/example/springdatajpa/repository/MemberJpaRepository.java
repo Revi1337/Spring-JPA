@@ -41,4 +41,12 @@ public class MemberJpaRepository {
         return em.find(Member.class, id);
     }
 
+    // DataJPA 의 쿼리메서드를 순수한 JPA 로 구현 --> 매우 귀찮은 일 --> DataJPA 가 이러한 쿼리메서드기능을 지원
+    public List<Member> findByUsernameAndAgeGreaterThen(String username, int age) {
+        return em.createQuery("select m from Member as m where m.username=:username and m.age > :age")
+                .setParameter("username", username)
+                .setParameter("age", age)
+                .getResultList();
+    }
+
 }
