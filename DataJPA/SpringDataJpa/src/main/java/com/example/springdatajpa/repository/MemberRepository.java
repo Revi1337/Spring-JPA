@@ -5,6 +5,8 @@ import com.example.springdatajpa.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.Collection;
 import java.util.List;
 
 // TODO 개발자는 JpaRepository 인터페이스만 선언해주면, Spring DataJpa 스스로 JpaRepository 의 구현체를 만들어서 인젝션을 해주는 것임.
@@ -28,4 +30,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query(value = "select new com.example.springdatajpa.dto.MemberDto(m.id, m.username, t.name) from Member m inner join m.team t") // DTO 로 바로 반환하는 방법
     List<MemberDto> findMemberDto();
+
+    @Query(value = "select m from Member as m where m.username in :names") // 여러개의 값을 Collection 으로 조회, SQL 에서는 IN 절로 수행됨.
+    List<Member> findByNames(@Param("names") Collection<String> names);
+
 }
