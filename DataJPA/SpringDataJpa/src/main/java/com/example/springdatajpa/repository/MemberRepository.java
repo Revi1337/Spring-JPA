@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 // TODO 개발자는 JpaRepository 인터페이스만 선언해주면, Spring DataJpa 스스로 JpaRepository 의 구현체를 만들어서 인젝션을 해주는 것임.
 // Spring DataJpa 가 애플리케이션 로딩시점에 JpaRepository 인터페이스와 관련된 레포지토리(여기서는 MemberRepository)의 구현체를 만들어서 인젝션해주는 것임.
@@ -33,5 +34,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query(value = "select m from Member as m where m.username in :names") // 여러개의 값을 Collection 으로 조회, SQL 에서는 IN 절로 수행됨.
     List<Member> findByNames(@Param("names") Collection<String> names);
+
+    List<Member> findListByUsername(String username); // 반환타입 컬렉션
+    Member findMemberByUsername(String username); // 단건
+    Optional<Member> findOptionalByUsername(String username); // 단건 Optional
 
 }

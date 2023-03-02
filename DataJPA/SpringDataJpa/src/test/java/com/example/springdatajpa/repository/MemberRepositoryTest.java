@@ -3,6 +3,7 @@ package com.example.springdatajpa.repository;
 import com.example.springdatajpa.dto.MemberDto;
 import com.example.springdatajpa.entity.Member;
 import com.example.springdatajpa.entity.Team;
+import jakarta.persistence.NoResultException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -175,5 +177,32 @@ class MemberRepositoryTest {
             System.out.println("member = " + member);
         }
     }
+
+    @Test
+    @DisplayName(value = "반환 타입")
+    public void returnType() throws Exception {
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("BBB", 20);
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        List<Member> aaa = memberRepository.findListByUsername("AAA"); // 컬렉션 반환
+        Member aaa1 = memberRepository.findMemberByUsername("AAA"); // 단건 반환
+        Member aaa2 = memberRepository.findOptionalByUsername("AAA").orElseThrow(NoResultException::new); // Optional 로 반환
+
+        // 반환값이 리스트인 메서드의 값이 없어도 익셉션이 아닌, Empty Collection 이 반환됨
+        System.out.println(memberRepository.findListByUsername("asdfasdasdf").size());
+
+        // 순수 JPA 는 getSingleResult 했을 때 값이 없으면 NoResultException 이 터졌었음
+        // 하지만, DataJPA 는 값이 없으면 NoResultException 을 try catch 로 받아서 null 이 반환되도록 변경됨.
+        Member res = memberRepository.findMemberByUsername("sdfads da");
+        System.out.println(res);
+
+        // 하지만, 리턴 타입이 Optional 이나 단건 인데 쿼리의 결과가 두가지가 이상이 나오면 NonUniqueResultException 이 터짐
+        // DataJpa 는 NonUniqueResultException 을 IncorrectResultSizeDataAccessException 이라는 스프링 에외로 변환해서 던져줌.
+        Optional<Member> aaa3 = memberRepository.findOptionalByUsername("AAA");
+        System.out.println("aaa3 = " + aaa3);
+    }
+
 
 }
