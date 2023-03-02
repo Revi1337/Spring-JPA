@@ -17,3 +17,8 @@ Spring DataJpa 는 쿼리메서드 기능을 제공
    https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.limit-query-result
 > 참고: 이 기능은 엔티티의 필드명이 변경되면 인터페이스에 정의한 메서드 이름도 꼭 함께 변경해야 한다. 그렇지 않으면 애플리케이션을 시작하는 시점에 오류가 발생함.
 > 이렇게 애플리케이션 로딩 시점에 오류를 인지할 수 있는 것이 스프링 데이터 JPA 의 매우 큰 장점이다
+
+// 메서드 이름으로 JPA NamedQuery 호출 (별로쓸일이 없음.)
+- JPA 에서는 em.createNamedQuery() 로 엔티티에 지정한 NamedQuery 를 지정
+- DataJPA 에는 레포지토리에 @Query(name="") 으로 엔티티에 지정한 NamedQuery 를 호출할 수 있음. (파라미터바인딩은 @Param(name = "") 사용)
+- 별로 쓰지 않지만, NamedQuery 가 가지는 큰 장점이있는데, 엔티티에 작성한 NamedQuery 는 애플리케이션 로딩시점에 파싱해봐서 오류가있으면 오류를 띄워준다는 것임.

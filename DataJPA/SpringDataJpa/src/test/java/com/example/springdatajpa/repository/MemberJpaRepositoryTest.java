@@ -83,4 +83,17 @@ class MemberJpaRepositoryTest {
         assertThat(result.size()).isEqualTo(1);
     }
 
+     @Test
+     @DisplayName(value = "순수한 JPA 의 NamedQuery 실행 테스트")
+     public void namedQueryTest() throws Exception {
+         Member m1 = new Member("AAA", 10);
+         Member m2 = new Member("BBB", 20);
+         memberJpaRepository.save(m1);
+         memberJpaRepository.save(m2);
+
+         List<Member> result = memberJpaRepository.findByUsername("AAA");
+         Member findMember = result.get(0);
+         assertThat(findMember).isEqualTo(m1);
+     }
+
 }

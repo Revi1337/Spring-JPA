@@ -5,6 +5,10 @@ import lombok.*;
 
 @Entity
 @Getter @Setter @NoArgsConstructor(access = AccessLevel.PROTECTED) @ToString(of = {"id", "username", "age"})
+@NamedQuery(                            // 순수 JPA 의 Named Query
+        name = "Member.findByUsername", // 메서드이름은 아무렇게나 해도 되지만, 관례상 엔티티명.메서드명
+        query = "select m from Member as m where m.username=:username" // 여기다가 JPQL 직접 선언
+)
 public class Member {
 
     @Id @GeneratedValue

@@ -99,4 +99,17 @@ class MemberRepositoryTest {
         List<Member> helloBy = memberRepository.findHelloBy(); // 전체조회
         List<Member> top3HelloBy = memberRepository.findTop3HelloBy(); // LIMIT
     }
+
+    @Test
+    @DisplayName(value = "DataJPA 의 NamedQuery 실행 테스트")
+    public void namedQueryTest() throws Exception {
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("BBB", 20);
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        List<Member> result = memberRepository.findByUsername("AAA");
+        Member findMember = result.get(0);
+        assertThat(findMember).isEqualTo(m1);
+    }
 }

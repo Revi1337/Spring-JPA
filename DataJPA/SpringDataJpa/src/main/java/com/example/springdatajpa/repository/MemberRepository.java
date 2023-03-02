@@ -2,6 +2,8 @@ package com.example.springdatajpa.repository;
 
 import com.example.springdatajpa.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -14,4 +16,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findHelloBy();
 
     List<Member> findTop3HelloBy();
+
+    @Query(name = "Member.findByUsername")  // DataJPA 의 Named 쿼리 실행 (Entity 가서 @NamedQuery 를 찾음)
+    List<Member> findByUsername(@Param("username") String username); // DataJPA 에서의 파라미터 바이딩은 @Param 사용
 }
