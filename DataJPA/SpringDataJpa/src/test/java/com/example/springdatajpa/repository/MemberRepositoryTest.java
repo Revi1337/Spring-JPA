@@ -1,6 +1,8 @@
 package com.example.springdatajpa.repository;
 
+import com.example.springdatajpa.dto.MemberDto;
 import com.example.springdatajpa.entity.Member;
+import com.example.springdatajpa.entity.Team;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +19,12 @@ class MemberRepositoryTest {
 
     private final MemberRepository memberRepository;
 
+    private final TeamRepository teamRepository;
+
     @Autowired
-    public MemberRepositoryTest(MemberRepository memberRepository) {
+    public MemberRepositoryTest(MemberRepository memberRepository, TeamRepository teamRepository) {
         this.memberRepository = memberRepository;
+        this.teamRepository = teamRepository;
     }
 
     @Test
@@ -125,4 +130,34 @@ class MemberRepositoryTest {
         Member findMember = result.get(0);
         assertThat(findMember).isEqualTo(m1);
     }
+
+    @Test
+    @DisplayName(value = "@Query 어노테이션을 사용해서 Entity 가 아닌, 값을 조회. (@Embedded 값타입도 조회 가능)")
+    public void findUsernameList() throws Exception {
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("BBB", 20);
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        List<String> usernameList = memberRepository.findUsernameList();
+        for (String s : usernameList) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    @DisplayName(value = "@Query 어노테이션을 사용해서 Entity 와 값이 아닌, DTO 로 바로 반환")
+    public void findMemberDtoTest() throws Exception {
+        Team team = new Team("teamA");
+        teamRepository.save(team);
+
+        Member m1 = new Member("AAA", 10);
+        m1.setTeam(team);
+        memberRepository.save(m1);
+
+        List<MemberDto> memberDto = memberRepository.findMemberDto();
+        for (MemberDto dto : memberDto)
+            System.out.println("dto = " + dto);
+    }
+
 }
