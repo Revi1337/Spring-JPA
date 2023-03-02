@@ -20,5 +20,10 @@ Spring DataJpa 는 쿼리메서드 기능을 제공
 
 // 메서드 이름으로 JPA NamedQuery 호출 (별로쓸일이 없음.)
 - JPA 에서는 em.createNamedQuery() 로 엔티티에 지정한 NamedQuery 를 지정
-- DataJPA 에는 레포지토리에 @Query(name="") 으로 엔티티에 지정한 NamedQuery 를 호출할 수 있음. (파라미터바인딩은 @Param(name = "") 사용)
+- DataJPA 에는 레포지토리에 @Query() 으로 엔티티에 지정한 NamedQuery 를 호출할 수 있음. (파라미터바인딩은 @Param() 사용)
 - 별로 쓰지 않지만, NamedQuery 가 가지는 큰 장점이있는데, 엔티티에 작성한 NamedQuery 는 애플리케이션 로딩시점에 파싱해봐서 오류가있으면 오류를 띄워준다는 것임.
+
+// `@Query` 어노테이션을 사용해서 리퍼지토리 인터페이스에 직접 정의 (이건 많이 사용)
+- @Query 어노테이션을 사용해서 리퍼지토리 인터페이스에 직접 정의. `name` 은 Entity 에 작성한 NamedQuery 을 불러올때 사용하고, `value` 는 쿼리문을 바로 실행하는 것임.
+- 이런 방식이 좋은이유는 귀찮게 NamedQuery 를 Entity 에 작성할 필요없이, @Query(value="") 에 JPQL 을 바로 실행할 수 있다는 것임.
+  그리고, JPQL 에 오타가나거나하면, 애플리케이션로딩시점에 오류를 잡아줌.

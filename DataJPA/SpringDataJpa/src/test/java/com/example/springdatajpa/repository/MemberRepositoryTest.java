@@ -112,4 +112,17 @@ class MemberRepositoryTest {
         Member findMember = result.get(0);
         assertThat(findMember).isEqualTo(m1);
     }
+
+    @Test
+    @DisplayName(value = "@Query 어노테이션을 사용해서 리퍼지토리 인터페이스에 직접 정의한것을 테스트 (이건 많이 사용)")
+    public void testQuery() throws Exception {
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("BBB", 20);
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        List<Member> result = memberRepository.findUser("AAA", 10);
+        Member findMember = result.get(0);
+        assertThat(findMember).isEqualTo(m1);
+    }
 }
