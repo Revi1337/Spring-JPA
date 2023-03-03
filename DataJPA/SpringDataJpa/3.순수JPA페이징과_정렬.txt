@@ -1,0 +1,20 @@
+// 페이징과 정렬 파라미터
+- org.springframework.data.domain.Sort : 정렬 기능
+- org.springframework.data.domain.Pageable : 페이징 기능 (내부에 Sort 포함)
+
+// 특별한 반환 타입
+org.springframework.data.domain.Page : 추가 count 쿼리 결과를 포함하는 페이징
+org.springframework.data.domain.Slice : 추가 count 쿼리 없이 다음 페이지만 확인 가능 (내부적으로 limit + 1조회)
+List (자바 컬렉션) : 추가 count 쿼리 없이 결과만 반환
+
+// Page 와 Slice 인터페이스
+**** Pageable 의 구현체(PageRequest) 를 넘기면 페이징쿼리는 날라가는데, JpaRepository 에 명시한 반환타입에 따라서, count(*) 쿼리를 날릴지 안날릴지 결정됨.
+* Page 면 count(*) 쿼리가 나감 --> 데이터를 모두 가져옴 (세부적인정보)
+* Slice 면 count(*) 쿼리가 나가지 않음. --> 데이터를 모두 가져오지않고, 다음페이지가 있냐없냐만 판별. --> 즉, 페이지에서 갖고오기한 size 보다 1 크게 페이지를 갖고와 다음페이지가 있냐없냐만 판별.
+  getTotalElements(), getTotalPages() 가 없음.
+* List<T> 면 갖고오기로한 페이지에서 설정한 size 개수만큼만 LIMIT 쿼리로 꺼내옴
+
+// 실무에서 Page? Slice?
+- 반환타입이 Page 면 count(*) 쿼리가 나가서 전체 데이터를 조회함. --> 전체 count 쿼리는 매우 무겁다 --> 성능이 느림 -->  count 쿼리를 다음과 같이 분리할 수 있음
+    @Query(value = “select m from Member m”, countQuery = “select count(m.username) from Member m”)
+    Page<Member> findMemberAllCountBy(Pageable pageable)

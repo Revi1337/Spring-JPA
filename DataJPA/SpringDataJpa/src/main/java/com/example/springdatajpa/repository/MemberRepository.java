@@ -2,6 +2,9 @@ package com.example.springdatajpa.repository;
 
 import com.example.springdatajpa.dto.MemberDto;
 import com.example.springdatajpa.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -38,5 +41,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findListByUsername(String username); // 반환타입 컬렉션
     Member findMemberByUsername(String username); // 단건
     Optional<Member> findOptionalByUsername(String username); // 단건 Optional
+
+    @Query(value = "select m from Member as m left outer join m.team t")
+    Page<Member> findByAge(int age, Pageable pageable); // DataJPA 의 페이징 처리. 두번째 파라미터에 Pageable 인터페이스를 넣어주면 됨. (즉, 들어오는것은 Pageable 의 구현체들)
+//    Slice<Member> findByAge(int age, Pageable pageable);
+//    List<Member> findByAge(int age, Pageable pageable);
 
 }

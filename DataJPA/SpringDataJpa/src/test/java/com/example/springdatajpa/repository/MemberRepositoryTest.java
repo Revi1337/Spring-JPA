@@ -8,6 +8,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -204,5 +208,92 @@ class MemberRepositoryTest {
         System.out.println("aaa3 = " + aaa3);
     }
 
+    @Test
+    @DisplayName(value = "DataJPA 의 Paging 테스트")
+    public void pagingTest() throws Exception {
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+        memberRepository.save(new Member("member6", 10));
+        int age = 10;
 
+        // username 기준으로 내림차순정렬해서, 한페이지당 3개씩 끊어서 0 페이지만 갖고오겠다는 의미임. (PageRequest 는 Pageable 인터페이스의 구현체)
+        PageRequest pageRequest = PageRequest.of(0, 4, Sort.by(Sort.Direction.DESC, "username"));
+
+        // Pageable 의 구현체(PageRequest) 를 넘기면 페이징쿼리는 날라가는데, 반환타입에 따라서, count(*) 같은 쿼리를 날릴지 안날릴지 결정됨.
+        // 반환타입이 Page 면 count(*) 를 가져옴 --> 세부적인 정보.
+        // 반환타입이 Slice 면 count(*) 를 가져오지않고, 다음페이지가 있냐없냐만 판별. --> 즉, 설정한 페이지에서 갖고오기한 size 보다 1 크게 페이지를 갖고와 다음페이지가 있냐없냐만 판별.(getTotalElements(), getTotalPages() 가 없음.)
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+
+        Page<MemberDto> toMap = page.map(member -> new MemberDto(member.getId(), member.getUsername(), member.getTeam().getName()));
+
+        List<Member> content = page.getContent();               // 현재 페이지에 조회된 데이터 (row 들)
+        for (Member member : content)
+            System.out.println("member = " + member);
+
+        System.out.println("getSize = " + page.getSize());      // 하나에 페이지에 들어가는 크기 (row 개수)
+        System.out.println("totalElements = " + page.getTotalElements());   // page 로 쪼개기 전, 총 row 의 개수
+        System.out.println("getTotalPages = " + page.getTotalPages());      // 총 page 수
+        System.out.println("getNumber = " + page.getNumber());  // page 로 쪼갠 후, 현재가 몇 page 인지 (몇쪽인지)
+        System.out.println("getNumberOfElements = " + page.getNumberOfElements()); // 현재 page 안에 존재하는 row 의 수.
+        System.out.println("isEmpty = " + page.isEmpty());      // 현재 페이지가 비어있는지.
+        System.out.println("isFirst = " + page.isFirst());      // 첫번째 페이지인지
+        System.out.println("isLast = " + page.isLast());        // 마지막 페이지인지
+        System.out.println("hasNext = " + page.hasNext());                 // 다음 페이지가 있냐
+        System.out.println("hasPrevious" + page.hasPrevious());            // 이전 페이지가 있냐
+
+        assertThat(page.getSize()).isEqualTo(4);
+        assertThat(page.getTotalElements()).isEqualTo(6L);
+        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.getNumber()).isEqualTo(1);
+        assertThat(page.getNumberOfElements()).isEqualTo(2);
+        assertThat(page.isEmpty()).isFalse();
+        assertThat(page.isFirst()).isFalse();
+        assertThat(page.isLast()).isTrue();
+        assertThat(page.hasNext()).isFalse();
+        assertThat(page.hasPrevious()).isTrue();
+    }
+
+    @Test
+    @DisplayName(value = "DataJPA 의 Slicing 테스트")
+    public void slicingTest() throws Exception {
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+        memberRepository.save(new Member("member6", 10));
+        int age = 10;
+
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        // Pageable 의 구현체(PageRequest) 를 넘기면 페이징쿼리는 날라가는데, 반환타입에 따라서, count(*) 같은 쿼리를 날릴지 안날릴지 결정됨.
+        // 반환타입이 Page 면 count(*) 를 가져옴 --> 세부적인 정보.
+        // 반환타입이 Slice 면 count(*) 를 가져오지않고, 다음페이지가 있냐없냐만 판별. --> 즉, 설정한 size() 보다 1 크게 페이지를 갖고와 다음페이지가 있냐없냐만 판별.
+        Slice<Member> page = memberRepository.findByAge(age, pageRequest);
+
+        List<Member> content = page.getContent();               // 현재 페이지에 조회된 데이터 (row 들)
+        for (Member member : content)
+            System.out.println("member = " + member);
+
+        System.out.println("getSize = " + page.getSize());      // 하나에 페이지에 들어가는 크기 (row 개수)
+        System.out.println("getNumber = " + page.getNumber());  // page 로 쪼갠 후, 현재가 몇 page 인지 (몇쪽인지)
+        System.out.println("getNumberOfElements = " + page.getNumberOfElements()); // 현재 page 안에 존재하는 row 의 수.
+        System.out.println("isEmpty = " + page.isEmpty());      // 현재 페이지가 비어있는지.
+        System.out.println("isFirst = " + page.isFirst());      // 첫번째 페이지인지
+        System.out.println("isLast = " + page.isLast());        // 마지막 페이지인지
+        System.out.println("hasNext = " + page.hasNext());                 // 다음 페이지가 있냐
+        System.out.println("hasPrevious" + page.hasPrevious());            // 이전 페이지가 있냐
+
+        assertThat(page.getSize()).isEqualTo(4);
+        assertThat(page.getNumber()).isEqualTo(1);
+        assertThat(page.getNumberOfElements()).isEqualTo(2);
+        assertThat(page.isEmpty()).isFalse();
+        assertThat(page.isFirst()).isFalse();
+        assertThat(page.isLast()).isTrue();
+        assertThat(page.hasNext()).isFalse();
+        assertThat(page.hasPrevious()).isTrue();
+    }
 }

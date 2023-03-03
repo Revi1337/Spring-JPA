@@ -1,6 +1,8 @@
 package com.example.springdatajpa.repository;
 
 import com.example.springdatajpa.entity.Member;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MemberJpaRepositoryTest {
 
     private final MemberJpaRepository memberJpaRepository;
+
+    @PersistenceContext EntityManager entityManager;
 
     @Autowired
     public MemberJpaRepositoryTest(MemberJpaRepository memberJpaRepository) {
