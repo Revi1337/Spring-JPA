@@ -358,4 +358,32 @@ class MemberRepositoryTest {
         }
     }
 
+    @Test
+    @DisplayName(value = "JPA Hint 테스트")
+    public void queryHint() throws Exception {
+        // given
+        Member member1 = memberRepository.save(new Member("member1", 10));
+        em.flush();
+        em.clear();
+
+        // when
+        Member findMember = memberRepository.findReadOnlyByUsername("member1"); // 변경감지 체크 X
+        findMember.setUsername("member2");
+
+        em.flush();
+    }
+
+    @Test
+    @DisplayName(value = "JPA Lock 테스트")
+    public void lockTest() throws Exception {
+        // given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        // when
+        List<Member> result = memberRepository.findLockByUsername("member1");
+    }
+
 }

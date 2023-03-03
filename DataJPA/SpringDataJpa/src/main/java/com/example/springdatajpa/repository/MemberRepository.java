@@ -2,13 +2,12 @@ package com.example.springdatajpa.repository;
 
 import com.example.springdatajpa.dto.MemberDto;
 import com.example.springdatajpa.entity.Member;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -60,4 +59,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Override @EntityGraph(attributePaths = {"team"}) // 내부적으로 team 을 fetch join 하겠다는 의미임.
     List<Member> findAll();                 // @EntityGraph 를 사용 JPQL 을 사용하지않아도 됨.. (DataJPA 에서 제공하는 fetch join (2))
+
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true")) // 스냅샷도 만들지 않고, 변경감지도 체크하지 않음. (진짜 조회전용 생성)
+    Member findReadOnlyByUsername(String username); // JPA 가 아닌 hibernate 에서 제공하는 힌트
+
+    @Lock(value = LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }
