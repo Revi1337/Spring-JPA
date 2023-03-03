@@ -72,4 +72,13 @@ public class MemberJpaRepository {
                 .getSingleResult();
     }
 
+    // 순수 JPA 로 Bulk 연산
+    // 영속성 컨텍스트를 무시함 --> 영속성 컨텍스트를 무시한다는말은 --> 변경감지 X --> 무조건 .flush() 되어 쿼리가 나감 --> 영속성컨텍스트를 무시하기 때문에, 업데이트 결과를 1차캐시에 반영하지 않음. -
+    // 결과적으로 DB 와 영속성컨텍스트가 일치하지않는 문제 발생 --> 해결책은 벌크연산후, .clear() 를 통해 컨텍스트를 초기화시켜주어야함.
+    public int bulkAgePlus(int age) {
+        return em.createQuery("update Member m set m.age = m.age + 1 where m.age >= :age")
+                .setParameter("age", age)
+                .executeUpdate();
+    }
+
 }

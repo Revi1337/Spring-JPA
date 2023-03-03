@@ -6,8 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Collection;
 import java.util.List;
@@ -47,4 +49,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 //    Slice<Member> findByAge(int age, Pageable pageable);
 //    List<Member> findByAge(int age, Pageable pageable);
 
+    // 순수 JPA 의 executeUpdate() 와 같은 역할이며 bulk 시 꼭 명시해주어야함. 적지 않으면 QueryExecutionRequestException 터짐.
+    @Modifying(clearAutomatically = true) // clearAutomatically 옵션은 DB 와 영속성컨텍스트가 일치하지않는 문제를 자동으로 해결하기 위한 옵션 --> 자동으로 영속성컨텍스트를 비워주는 역할임. --> 순수 JPA 에서 bulk 연산을 날리고 clear() 하는 것을 자동으로 시켜주는 것임.
+    @Query(value = "update Member as m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);             // DataJPa 에서의 bulk 연산 처리
 }
