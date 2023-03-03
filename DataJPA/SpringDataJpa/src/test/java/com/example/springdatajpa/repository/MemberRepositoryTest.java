@@ -322,4 +322,40 @@ class MemberRepositoryTest {
         assertThat(member5.getAge()).isEqualTo(41);
     }
 
+    @Test
+    @DisplayName(value = "findMemberLazy")
+    public void findMemberLazy() throws Exception {
+        // given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamB);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        em.flush();
+        em.clear();
+
+        // when (N + 1)
+        System.out.println("=====================================LAZY FETCH=====================================");
+        List<Member> lazyMembers = memberRepository.findAll();
+        for (Member member : lazyMembers) {
+            System.out.println("member.username = " + member.getUsername());
+            System.out.println("member.team.class = " + member.getTeam().getClass()); // Proxy 객체
+            System.out.println("member.team.name = " + member.getTeam().getName()); // Proxy 객체 초기화
+        }
+
+        em.flush();
+        em.clear();
+
+        System.out.println("=====================================FETCH JOIN=====================================");
+        List<Member> fetchJoinMembers = memberRepository.findMemberFetchJoin();        // fetch join 으로 lazy 애들을 한방쿼리로 모두 갖고옴
+        for (Member member : fetchJoinMembers) {
+            System.out.println("member.username = " + member.getUsername());
+            System.out.println("member.team.class = " + member.getTeam().getClass()); // Proxy 객체가 아닌 진짜 Team Entity
+            System.out.println("member.team.name = " + member.getTeam().getName());
+        }
+    }
+
 }

@@ -5,6 +5,7 @@ import com.example.springdatajpa.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -53,4 +54,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying(clearAutomatically = true) // clearAutomatically 옵션은 DB 와 영속성컨텍스트가 일치하지않는 문제를 자동으로 해결하기 위한 옵션 --> 자동으로 영속성컨텍스트를 비워주는 역할임. --> 순수 JPA 에서 bulk 연산을 날리고 clear() 하는 것을 자동으로 시켜주는 것임.
     @Query(value = "update Member as m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);             // DataJPa 에서의 bulk 연산 처리
+
+    @Query(value = "select m from Member as m inner join fetch m.team t")
+    List<Member> findMemberFetchJoin();     // fetch join 으로 연관된 Entity 들을 한방쿼리로 갖고오기 (DataJPA 에서 제공하는 fetch join (1))
+
+    @Override @EntityGraph(attributePaths = {"team"}) // 내부적으로 team 을 fetch join 하겠다는 의미임.
+    List<Member> findAll();                 // @EntityGraph 를 사용 JPQL 을 사용하지않아도 됨.. (DataJPA 에서 제공하는 fetch join (2))
 }

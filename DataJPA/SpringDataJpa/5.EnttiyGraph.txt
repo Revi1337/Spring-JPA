@@ -1,0 +1,8 @@
+// @EntityGraph
+* 연관된 엔티티들을 SQL 한번에 조회하는 방법 (fetch join 이해 필요)
+--> member team 은 지연로딩 관계. 따라서 team 의 데이터를 조회할 때 마다 쿼리가 실행된다. (N+1 문제 발생)
+* 연관된 엔티티를 한번에 조회하려면 페치 조인이 필요
+--> @Query("select m from Member m left join fetch m.team")
+* 스프링 DataJPA 는 JPA 가 제공하는 @EntityGraph 기능을 편리하게 사용하게 도와줌. 이 기능을 사용하면 JPQL 없이 페치 조인을 사용할 수 있음. (JPQL + 엔티티 그래프도 가능)
+--> @EntityGraph(attributePaths = {"team"})
+*** 결론 : 간단할때는 @EntityGraph 를 사용하고, 쿼리가 복잡해지면 JPQL 을 사용하자.
