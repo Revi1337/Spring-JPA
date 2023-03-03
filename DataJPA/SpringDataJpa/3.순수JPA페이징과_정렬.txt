@@ -9,7 +9,7 @@ List (자바 컬렉션) : 추가 count 쿼리 없이 결과만 반환
 
 // Page 와 Slice 인터페이스
 **** Pageable 의 구현체(PageRequest) 를 넘기면 페이징쿼리는 날라가는데, JpaRepository 에 명시한 반환타입에 따라서, count(*) 쿼리를 날릴지 안날릴지 결정됨.
-* Page 면 count(*) 쿼리가 나감 --> 데이터를 모두 가져옴 (세부적인정보)
+* Page 면 count(*) 쿼리가 나감 --> 데이터를 모두 가져옴 (세부적인정보) --> 신기한건 0 번쨰 page 만 검색할때 count(*) 쿼리가 나감.
 * Slice 면 count(*) 쿼리가 나가지 않음. --> 데이터를 모두 가져오지않고, 다음페이지가 있냐없냐만 판별. --> 즉, 페이지에서 갖고오기한 size 보다 1 크게 페이지를 갖고와 다음페이지가 있냐없냐만 판별.
   getTotalElements(), getTotalPages() 가 없음.
 * List<T> 면 갖고오기로한 페이지에서 설정한 size 개수만큼만 LIMIT 쿼리로 꺼내옴

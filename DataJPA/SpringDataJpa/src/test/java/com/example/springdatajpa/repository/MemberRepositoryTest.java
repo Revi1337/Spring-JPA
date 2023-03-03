@@ -227,7 +227,7 @@ class MemberRepositoryTest {
         // 반환타입이 Slice 면 count(*) 를 가져오지않고, 다음페이지가 있냐없냐만 판별. --> 즉, 설정한 페이지에서 갖고오기한 size 보다 1 크게 페이지를 갖고와 다음페이지가 있냐없냐만 판별.(getTotalElements(), getTotalPages() 가 없음.)
         Page<Member> page = memberRepository.findByAge(age, pageRequest);
 
-        Page<MemberDto> toMap = page.map(member -> new MemberDto(member.getId(), member.getUsername(), member.getTeam().getName()));
+        Page<MemberDto> toMap = page.map(member -> new MemberDto(member.getId(), member.getUsername(), null));
 
         List<Member> content = page.getContent();               // 현재 페이지에 조회된 데이터 (row 들)
         for (Member member : content)
@@ -247,13 +247,13 @@ class MemberRepositoryTest {
         assertThat(page.getSize()).isEqualTo(4);
         assertThat(page.getTotalElements()).isEqualTo(6L);
         assertThat(page.getTotalPages()).isEqualTo(2);
-        assertThat(page.getNumber()).isEqualTo(1);
-        assertThat(page.getNumberOfElements()).isEqualTo(2);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.getNumberOfElements()).isEqualTo(4);
         assertThat(page.isEmpty()).isFalse();
-        assertThat(page.isFirst()).isFalse();
-        assertThat(page.isLast()).isTrue();
-        assertThat(page.hasNext()).isFalse();
-        assertThat(page.hasPrevious()).isTrue();
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.isLast()).isFalse();
+        assertThat(page.hasNext()).isTrue();
+        assertThat(page.hasPrevious()).isFalse();
     }
 
     @Test
