@@ -1,0 +1,34 @@
+===== 사용자 정의 리포지토리 구현 =====
+- 스프링 데이터 JPA 리포지토리는 인터페이스만 정의하고 구현체는 스프링이 자동 생성
+- 스프링 데이터 JPA 가 제공하는 인터페이스를 직접 구현하면 구현해야 하는 기능이 너무 많음
+- 다양한 이유로 인터페이스의 메서드를 직접 구현하고 싶다면?
+    JPA 직접 사용( EntityManager )
+    스프링 JDBC Template 사용
+    MyBatis 사용
+    데이터베이스 커넥션 직접 사용 등등...
+    Querydsl 사용
+
+===== 보통 간단한 쿼리들은 DataJPA 의 JpaRepository 의 기본기능을 사용하고, 복잡한 쿼리들은 Custom 을 만듬. ======
+// 실무에서는 주로 QueryDSL 이나 SpringJdbcTemplate 을 함께 사용할 때 사용자 정의 리포지토리 기능을 자주 사용
+// DataJPA 에서 Custom 한 기능을 쓰고 싶을 때 사용하는 방법
+(사용자 정의 리포지토리 생성 하여 JpaRepository 를 상속한 인터페이스에다가 상속시키는 방법)
+1. Custom interface 하나를 만든다.                                                (MemberRepositoryCustom)
+2. Custom 인터페이스를 구현한 class 를 만든다.                                       (MemberRepositoryImpl)
+   - 규칙: (리포지토리 인터페이스 이름 + Impl) 혹은 (Custom Interface 이름 + Impl) --> 스프링 Data JPA 가 인식해서 스프링 빈으로 등록
+   - 이 Custom 인터페이스를 구현체를 만들때, 구현체 class 의 이름은 꼭 JpaRepository 를 상속한 인터페이스 + impl 이어야함을 주의해야 함.
+   - JpaRepository 를 상속한 인터페이스 이름이 MemberRepository 이면, Custom 인터페이스를 구현체의 이름은 MemberRepositoryImpl 이거나 MemberRepositoryCustomImpl 이어야한다는 것임.
+3. JpaRepository 를 상속한 인터페이스에다가, 생성한 interface 한개를 더 extends 시켜준다. (extends JpaRepository<Member, Long>, MemberRepositoryCustom)
+* DataJPA 가 JpaRepository 를 상속한 인터페이스의 구현체를 만들때, Custom interface 까지 포함시켜 만들어줌. (Java 에서 해주는 것이 아닌, DataJPA 가 해줌)
+
+// 항상 사용자 정의 리포지토리가 필요한 것은 아님. 그냥 임의의 리포지토리를 만들어도 됨.
+   예를들어 MemberQueryRepository 를 인터페이스가 아닌 클래스로 만들고 스프링 빈으로 등록해서
+   그냥 직접 사용해도 됨.. 물론 이 경우 스프링 데이터 JPA 와는 아무런 관계 없이 별도로 동작함.
+--> 결론은 핵심 비지니스 로직이 있는 리포지토리와 DTO 들을 뽑는 쿼리를 뽑는 로직이 있는 리포지토리를 분리하라는 것임.
+    (상단의 DataJPA 에서 Custom 한 기능을 사용하는 방법은 분리하는것이 아님. 상속관계에서 JpaRepository 인터페이스가 더 커지는 것임.)
+
+// 결론
+* 간단한 쿼리는 JpaRepository 의 기본기능들 사용하고, 복잡하거나 하면 Custom 인터페이스를 만들어서 사용하자.
+* 그렇다고 모두 Custom 인터페이스에 때려박는 것이 아닌, 핵심 비지니스 로직이 있는 리포지토리와 DTO 들을 뽑는 쿼리를 뽑는 로직이 있는 리포지토리를 분리할 필요성이 있다.
+
+
+

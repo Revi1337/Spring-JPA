@@ -33,6 +33,8 @@ class MemberRepositoryTest {
 
     @PersistenceContext EntityManager em;
 
+    @Autowired MemberQueryRepository memberQueryRepository;
+
     @Autowired
     public MemberRepositoryTest(MemberRepository memberRepository, TeamRepository teamRepository) {
         this.memberRepository = memberRepository;
@@ -384,6 +386,18 @@ class MemberRepositoryTest {
 
         // when
         List<Member> result = memberRepository.findLockByUsername("member1");
+    }
+
+    @Test
+    @DisplayName(value = "DataJPA 의 Custom Interface 를 생성해서 사용하는 테스트")
+    public void customInterface() throws Exception {
+        List<Member> result = memberRepository.findMemberCustom();
+    }
+
+    @Test
+    @DisplayName(value = "핵심 비지로직과 아닌것을 분리하는 방법 테스트")
+    public void seperateLogic() {
+        memberQueryRepository.findAllMembers();
     }
 
 }
