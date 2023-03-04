@@ -1,5 +1,7 @@
 package com.example.springdatajpa.entity;
 
+import com.example.springdatajpa.repository.BaseEntity;
+import com.example.springdatajpa.repository.JpaBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +11,7 @@ import lombok.*;
         name = "Member.findByUsername", // 메서드이름은 아무렇게나 해도 되지만, 관례상 엔티티명.메서드명
         query = "select m from Member as m where m.username=:username" // 여기다가 JPQL 직접 선언
 )
-public class Member {
+public class Member extends BaseEntity {
 
     @Id @GeneratedValue
     @Column(name = "member_id")

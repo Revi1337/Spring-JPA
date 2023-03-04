@@ -1,0 +1,31 @@
+// Auditing
+- 엔티티를 생성, 변경할 때 변경한 사람과 시간을 추적하고 싶으면?
+--> 등록일, 수정일, 등록자, 수정자 등 필요 --> 모든테이블에 남겨놓는 것이 좋음 --> 하지만, 모두 중복코드 --> DataJPA 의 Auditing 기능을 사용하여 자동화 가능
+
+
+// 순수 JPA 경우
+1. 순수 JPA 에서는 공통필드를 정의한 클래스를 생성하여 각 Entity 에 extends.
+   --> 이 때, 공통필드를 정의한 클래스에 @MappedSuperClass 필요. 공통필드를 정의한 클래스의 데이터(속성)들만 컬럼으로 사용하겠다는 의미임. --> JPA 나 DataJPA 에서 진짜 Entity 상속관계 매핑은 따로 존재하기 때문임.
+2. 공통필드를 정의한 클래스에 @PrePersist, @PostPersist, @PreUpdate, @PostUpdate 등으로 persist 나 update 전 수행할 기능들을 정의
+
+
+// DataJPA 에서는 @ModifiedBy, @LastModifiedAt 등으로 자동화 가능
+1. 공통필드를 정의한 클래스를 생성하여 각 Entity 에 extends.
+2. 설정 필요
+    --> @EnableJpaAuditing 스프링 부트 설정 클래스에 적용해야 함. --> DataJPA 의 Auditing 기능을 자동화해주는 기능을 사용하겠다는 의미. 설정안하면 적용이 안됨. --> 별도의 설정클래스로 뺴거나, SpringBootApplication 위치에 달아주어도 됨.
+    --> 공통필드를 정의한 클래스에 @MappedSuperClass 필요. 공통필드를 정의한 클래스의 데이터(속성)들만 컬럼으로 사용하겠다는 의미임. --> JPA 나 DataJPA 에서 진짜 Entity 상속관계 매핑은 따로 존재하기 때문임.
+    --> @EntityListener(AuditingEntityListener.class) 를 공통 엔티티에 적용해야 함. --> Auditing 이벤트를 받아서 처리해주겠다는의미. (Auditing 이벤트는 순수 JPA 에서의 @PrePersist 등의 이벤트를 의미함.)
+3. @LastModifiedBy, @LastModifiedDate, @CreatedBy, @LastModifiedBy 등을 사용하면 값이 자동으로 들어가게 됨.
+    * 주의 *
+    --> @LastModifiedBy, @LastModifiedDate 는 어느시스템이든 시간이기때문에, 자동으로 값이 할당되지만, @CreatedBy, @LastModifiedBy 는 값이 자동으로 들어가지 않음.
+    --> @CreatedBy, @LastModifiedBy 에 값을 자동으로 넣기위해서는 `AuditorAware<T>` Bean 이 필요.
+    --> @CreatedBy, @LastModifiedBy Auditor 이벤트가 호출될때마다 AuditorAware 빈을 호출해서 AuditorAware 의 getCurrentAuditor 메서드를 통해 결과물을 꺼내옴.
+        실제나 실무에서는 AuditorAware 빈을 통해 Session 이나 JWT 의 Authentication 객체를 꺼내와서 사요함.
+
+// @LastModifiedBy, @LastModifiedDate, @CreatedBy, @LastModifiedBy 의 사용이 공통되지 않을때 경우
+    Ex) 어느엔티티에는 @LastModifiedBy, @LastModifiedDate 만 사용하고, 다른 엔티티는 @LastModifiedBy, @LastModifiedDate, @CreatedBy, @LastModifiedBy 모두 사용함
+    1. 어느엔티티에는 @LastModifiedBy, @LastModifiedDate 만 있는 BaseTimeEntity Class 를 만들어 이를 상속하여 사용.
+    2. 다른엔티티에는 BaseTimeEntity 를 상소한 BaseEntity Class 를 만들고 BaseEntity 를 상속하여 사용.
+
+// 그럴일은 없겠지만, 디폴트로 Update 나 Create 시에 null 을 넣고싶으면, @EnableJpaAuditing 의 옵션에 설정할 수 있음
+    --> @EnableJpaAuditing(modifyOnCreate = false) : update 는 null 로 들어감.
