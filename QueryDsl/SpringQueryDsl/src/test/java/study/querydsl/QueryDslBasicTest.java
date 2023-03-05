@@ -1,5 +1,6 @@
 package study.querydsl;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -13,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
 import study.querydsl.entity.Team;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static study.querydsl.entity.QMember.member;
@@ -91,6 +94,36 @@ public class QueryDslBasicTest {
                 )
                 .fetchOne();
         assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+    
+    @Test
+    @DisplayName(value = "검색 결과 조회 테스트")
+    public void resultFetchTest() {
+//        Member fetchOne = query                         // 단건 결과 조회 (여기서는 BeforeEach 로 생성된 여러개의 데이터 때문에 NonUniqueResultException 터짐)
+//                .selectFrom(member)
+//                .fetchOne();
+
+//        List<Member> fetch = query                      // 리스트 결과 조회
+//                .selectFrom(member)
+//                .fetch();
+
+//        Member fetchFirst = query                       // limit(1).fetchOne() 과 동일함
+//                .selectFrom(member)
+//                .fetchFirst();
+//        Member fetchLimitOne = query                    // fetchFirst() 와 동일함
+//                .selectFrom(member)
+//                .limit(1).fetchOne();
+//
+//        QueryResults<Member> results = query
+//                .selectFrom(member)                     // 쿼리가 두방나감. 페이징용 count() 쿼리로 모든 데이터의 수를 갖고오는 쿼리와 (totalCount)
+//                .fetchResults();                        // content 용 쿼리 를 갖고온다.
+//        results.getTotal();
+//        List<Member> content = results.getResults();
+
+        long total = query                              // count() 용 쿼리만 나간다.
+                .selectFrom(member)
+                .fetchCount();
+        assertThat(total).isEqualTo(4);
     }
 
 }
