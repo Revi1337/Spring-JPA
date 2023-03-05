@@ -1,0 +1,21 @@
+=========== 검색 조건 쿼리 ===========
+// JPQL 이 제공하는 모든 검색 조건을 제공함
+    .eq()           : =
+    .ne()           : !=
+    .eq().not()     : !=
+    .isNotNull()    : is not null
+    .in(,)          : age in (10,20)
+    .notIn(,)       : age not in (10,20)
+    .between(,)     : age between 10, 30
+    .goe()          : >=
+    .gt()           : >
+    .loe()          : <=
+    .lt()           : <
+    .like()         : like 검색
+    .contains()     : like %member%
+    .startsWith()   : like member%
+
+// and 조건을 풀수있는 방법 두가지
+1. .and() 로 메서드체인
+2. 쉼표로 끊어서 파라미터 처리
+

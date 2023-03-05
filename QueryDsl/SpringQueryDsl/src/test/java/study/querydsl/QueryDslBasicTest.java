@@ -6,7 +6,9 @@ import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.jpa.repository.support.QuerydslJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -63,4 +65,32 @@ public class QueryDslBasicTest {
                 .fetchOne();
         assertThat(findMember.getUsername()).isEqualTo("member1");
     }
+
+    @Test
+    @DisplayName(value = "검색 쿼리 테스트")
+    public void searchTest() {
+        Member findMember = query
+                .select(member)
+                .from(member)                                                // select 와 from 의 인자가 같으면 selectFrom() 으로 바꿀 수 있음.
+                .where(
+                        member.username.eq("member1")                    // and() 나 or() 로 검색 조건을 걸 수 있고, 메서드 체인을 걸 수 있음.
+                        .and(member.age.between(10, 30))
+                )
+                .fetchOne();
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    @DisplayName(value = "And 조건 검색 쿼리 테스트")
+    public void searchAndParamTest() {
+        Member findMember = query.select(member)
+                .from(member)
+                .where( // and 조건의 경우 는 굉장히 자주사용하기 때문에 .and() 로 체인하는 방법말고, 쉼표로 끊어서 조건을 줄 수 있다.
+                        member.username.eq("member1"),
+                        member.age.eq(10)
+                )
+                .fetchOne();
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
 }
