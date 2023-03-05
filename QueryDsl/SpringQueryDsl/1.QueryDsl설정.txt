@@ -1,0 +1,40 @@
+// QueryDsl 설정
+1. 요구사항 (스프링부트 3.0 이상)
+    - Java 17 이상을 사용해야 함.
+    - javax 패키지 이름을 jakarta 로 변경해야 함
+    - 오라클과 자바 라이센스 문제로 모든 javax 패키지를 jakarta 로 변경하기로 함
+    - H2 데이터베이스를 2.1.214 버전 이상 사용해주세요
+
+2. 설정
+    1. build.gradle 에 의존성 추가
+        ```
+        // QueryDsl 설정 추가
+        implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+        annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+        annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+        annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+        ```
+    2. build.gradle 에 QueryDsl 빌드관련 설정을 해야함. (스프링부트 3.0 이하만 해당. 3.0 이상은 그냥 1번만 실행하고 main 실행하면 QClass 가 만들어짐.)
+        ```
+        //querydsl 추가 시작
+        def querydslDir = "$buildDir/generated/querydsl"
+        querydsl {
+         jpa = true
+         querydslSourcesDir = querydslDir
+        }
+        sourceSets {
+         main.java.srcDir querydslDir
+        }
+        configurations {
+         querydsl.extendsFrom compileClasspath
+        }
+        compileQuerydsl {
+         options.annotationProcessorPath = configurations.querydsl
+        }
+        //querydsl 추가 끝
+        ```
+    3. Gradle -> tasks -> other -> compileQuerydsl 더블클릭
+
+
+
+// QClass 가 있는 디렉터리가 Git 에 올릴때 ignore 시키는 것이 좋다.
