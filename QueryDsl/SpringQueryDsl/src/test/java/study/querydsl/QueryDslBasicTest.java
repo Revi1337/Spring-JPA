@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.repository.support.QuerydslJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -148,5 +149,32 @@ public class QueryDslBasicTest {
         assertThat(member5.getUsername()).isEqualTo("member5");
         assertThat(member6.getUsername()).isEqualTo("member6");
         assertThat(memberNull.getUsername()).isNull();
+    }
+
+    @Test
+    @DisplayName(value = "페이징 테스트")
+    public void pagingTest() {
+        // ============== count() 쿼리가 나가지 않는 페이징 ==============
+//        List<Member> results = query
+//                .selectFrom(member)
+//                .orderBy(member.username.desc())
+//                .offset(1)                      // 끊어올 쿼리의 시작위치 (offset --> 0부터 시작임)
+//                .limit(3)                       // offset 으로부터 몇개를 가져올 것인지
+//                .fetch();
+//        assertThat(results.size()).isEqualTo(3);
+
+        // ============== count() 쿼리가 나가는 페이징 ==============
+        // --> 이 방벙은 실무에서 쓸수있을 떄가 있고 없을떄가 있음. --> count() 쿼리를 분리해서 따로 작성해야하는 경우도 있다는 것임.
+        // --> 페이징 쿼리가 단순하면 써도됨. 하지만, content 쿼리는 되게 복잡한데 count 쿼리는 단순하게 짤수있을때가 있음. (이런경우에는 content 쿼리와 count 쿼리를 따로 작성해야 함.)
+        QueryResults<Member> results = query
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1)
+                .limit(2)
+                .fetchResults();
+        assertThat(results.getTotal()).isEqualTo(4);            // 페이징전의 총 row 개수 (cont 쿼리가 얘때문에 나가는 것임.)
+        assertThat(results.getOffset()).isEqualTo(1);           // 끊어올 쿼리의 시작위치 (offset --> 0부터 시작임)
+        assertThat(results.getLimit()).isEqualTo(2);            // offset 으로부터 몇개를 가져올 것인지
+        assertThat(results.getResults().size()).isEqualTo(2);   // 끊어온 row 들의 개수
     }
 }
