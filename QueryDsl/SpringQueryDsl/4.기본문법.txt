@@ -36,3 +36,16 @@
 .offset(1)                     // 끊어올 쿼리의 시작위치 (offset --> 0부터 시작임)
 .limit(3)                      // offset 으로부터 몇개를 가져올 것인지
 .fetch() 혹은 .fetchResults()   // fetch() 는 count 쿼리 x, .fetchResults() 는 count 쿼리 O
+
+=========== 집합 ===========
+.select(member.age.sum(), member.username)    // select 에서 조회를 할 떄, 단일타입이 아닌, 다중타입이면 리턴타입이 Tuple 이다.
+.from(member)
+
+.select(team.name, member.age.avg())          // select 절에서 단일타입이 아닌, 다중타입 --> 리턴타입 Tuple
+    .from(member)
+    .join(member.team, team)
+    .groupBy(team.name)                       // Team 의 이름으로 그룹 (groupBy)
+    .having(team.name.eq("~@#!@"))            // 그룹화된 결과를 제한할때 사용하는 having
+    .fetch();
+
+

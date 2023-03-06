@@ -1,6 +1,7 @@
 package study.querydsl;
 
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -14,12 +15,14 @@ import org.springframework.data.jpa.repository.support.QuerydslJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
+import study.querydsl.entity.QTeam;
 import study.querydsl.entity.Team;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static study.querydsl.entity.QMember.member;
+import static study.querydsl.entity.QTeam.team;
 
 @SpringBootTest @Transactional
 public class QueryDslBasicTest {
@@ -177,4 +180,43 @@ public class QueryDslBasicTest {
         assertThat(results.getLimit()).isEqualTo(2);            // offset 으로부터 몇개를 가져올 것인지
         assertThat(results.getResults().size()).isEqualTo(2);   // 끊어온 row 들의 개수
     }
+
+    @Test
+    @DisplayName(value = "집합 테스트 (1) - select 절에서 다중타입 ")
+    public void selectMultiTypeTest() {
+        List<Tuple> result = query
+                .select(     // select 에서 조회하는것인 단일타입이 아니라, 여러개의타입이면 리턴타입은 Tuple 임 --> 이유는 select 절에서 뽑아내려는 컬럼들의 타입이 다 다를수있기 때문.
+                        member.count(),
+                        member.age.sum(),
+                        member.age.avg(),
+                        member.age.max(),
+                        member.age.min())
+                .from(member)
+                .fetch();
+        Tuple tuple = result.get(0);
+        assertThat(tuple.get(member.count())).isEqualTo(4);     // Tuple 에 있는 값을 꺼낼떄는 select 절에 넣은 값과 똑같이 넣어주면 됨.
+        assertThat(tuple.get(member.age.sum())).isEqualTo(100);
+        assertThat(tuple.get(member.age.avg())).isEqualTo(25);
+        assertThat(tuple.get(member.age.max())).isEqualTo(40);
+        assertThat(tuple.get(member.age.min())).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName(value = "집합 테스트 (2) - groupBy 사용 ")
+    public void groupingByTest() {
+        // Team 의 이름과 각 Team 의 평균 연령을 구해라
+        List<Tuple> result = query
+                .select(team.name, member.age.avg())        // select 절에서 단일타입이 아닌, 다중타입 --> 리턴타입 Tuple
+                .from(member)
+                .join(member.team, team)                    // Member 의 Team 와 Team 을 조인 (JPQL 조인과 동일함.)
+                .groupBy(team.name)                         // Team 의 이름으로 그룹짐
+                .fetch();
+        Tuple teamA = result.get(0);
+        Tuple teamB = result.get(1);
+        assertThat(teamA.get(team.name)).isEqualTo("teamA");
+        assertThat(teamA.get(member.age.avg())).isEqualTo(15);
+        assertThat(teamB.get(team.name)).isEqualTo("teamB");
+        assertThat(teamB.get(member.age.avg())).isEqualTo(35);
+    }
+
 }
