@@ -48,4 +48,19 @@
     .having(team.name.eq("~@#!@"))            // 그룹화된 결과를 제한할때 사용하는 having
     .fetch();
 
+=========== JOIN ===========
+// inner join
+.selectFrom(member)
+.innerJoin(member.team, team)                  // 그냥 .join() 과 동일 (innerJoin(), join() 동일)
+.where(team.name.eq("teamA"))
+
+// left join
+.selectFrom(member)
+.leftJoin(member.team, team)                   // 그냥 leftJoin()
+.where(team.name.eq("teamA"))
+
+// theta join
+.select(member)
+.from(member, team)                            // theta 조인(막조인)은 from 절에 QClass 타입을 두개 나열하는 것임. (쉽게말해 모든 회원과 팀을 가져와서 조인하는 것임)
+.where(member.username.eq(team.name))
 

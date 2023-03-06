@@ -219,4 +219,30 @@ public class QueryDslBasicTest {
         assertThat(teamB.get(member.age.avg())).isEqualTo(35);
     }
 
+    @Test
+    @DisplayName(value = "inner 조인 테스트 - [팀 A 에 소속된 모든 회원]")
+    public void joinTest() {
+        List<Member> result = query
+                .selectFrom(member)
+                .innerJoin(member.team, team)                   // 그냥 .join() 과 동일
+                .where(team.name.eq("teamA"))
+                .fetch();
+        assertThat(result).extracting("username").containsExactly("member1", "member2");
+    }
+
+    @Test
+    @DisplayName(value = "theta(연관관계가 아니여도 할수있는 조인 ) 조인 테스트 - [회원의 이름이 팀 이름과 같은 회원을 조회")
+    public void thetaJoinTest() {
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+        em.persist(new Member("teamC"));
+
+        List<Member> result = query
+                .select(member)
+                .from(member, team)                         // theta 조인(막조인)은 from 절에 QClass 타입을 두개 나열하는 것임. (쉽게말해 모든 회원과 팀을 가져와서 조인하는 것임)
+                .where(member.username.eq(team.name))
+                .fetch();
+        assertThat(result).extracting("username").containsExactly("teamA", "teamB");
+    }
+
 }
