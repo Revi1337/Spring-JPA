@@ -26,3 +26,9 @@
 .fetchResults()     : 페이징 정보 포함, total count 쿼리 추가 실행
 .fetchCount()       : count() 쿼리로 변경해서 count 수만 조회
 
+=========== 정렬 ===========
+.orderBy(
+    member.age.desc(),
+    member.username.asc().nullsLast()   // 회원 이름이 없으면 마지막에 출력 (nulls last)
+)                                       // 반대로 이름이 없으면 첫번째로 출력도 있음. nullsFirst()
+
