@@ -2,6 +2,7 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -245,4 +246,52 @@ public class QueryDslBasicTest {
         assertThat(result).extracting("username").containsExactly("teamA", "teamB");
     }
 
+    @Test
+    @DisplayName(value = "join 의 조건을 주는 on 테스트 - [회원과 팀을 조인하면서, `팀 이름이 teamA인 팀만` 조인, 회원은 모두 조회]")
+    public void join_on_filteringTest() {
+        // =================== JPQL 로 작성했을 때 ===================
+        // (select m,t from Member as m left join m.team t on t.name = "teamA")
+
+        // =================== QueryDsl 로 작성했을 때  (left)===================
+        // left 조인이면 on 절로 조인하는 대상을 줄일 수 있다.
+        List<Tuple> teamA = query
+                .select(member, team)
+                .from(member)
+                .leftJoin(member.team, team).on(team.name.eq("teamA"))
+                .fetch();
+        for (Tuple tuple : teamA) {
+            System.out.println("tuple = " + tuple);
+        }
+
+        // =================== QueryDsl 로 작성했을 때  (inner)===================
+        // 하지만 inner 조인이면 on 이나 where 로 결과가 동일하기 떄문에 의미가 없다.
+//        List<Tuple> result = query
+//                .select(member, team)
+//                .from(member)
+//                .innerJoin(member.team, team)
+//                // .on(team.name.eq("teamA"))                                 // --> 요놈과
+//                // .where(team.name.eq("teamA"))                              // --> 요놈이 innerJoin 일때는 동일하다는 것임.
+//                .fetch();
+//        for (Tuple tuple : result) {
+//            System.out.println("tuple = " + tuple);
+//        }
+    }
+
+    @Test
+    @DisplayName(value = "연관관계 없는 엔티티 외부 조인 테스트 - [회원의 이름과 팀의 이름이 같은 대상 외부 조인]")
+    public void join_on_no_relation() {
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+        em.persist(new Member("teamC"));
+
+        List<Tuple> result = query
+                .select(member, team)
+                .from(member)
+                .leftJoin(team).on(member.username.eq(team.name))      // 주의! 문법을 잘 봐야 한다. leftJoin() 부분에 일반 조인과 다르게 엔티티 하나만 들어간다.
+                .fetch();
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
+    
 }
