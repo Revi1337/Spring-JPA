@@ -68,6 +68,43 @@ public class JpaMain {
 //                    System.out.println("-->  member = " + member);
 //                }
 //            }
+            // TODO @OneToMany fetch join 을 사용했을 때 --> 주의사항 --> 컬렉션을 페치 조인하면 페이징 API (setFirstResult, setMaxResult) 를 사용할 수 없다.
+//            entityManager.flush();
+//            entityManager.clear();
+//            String query = "select t from Team as t inner join fetch t.members m";
+//            List<Team> resultList = entityManager.createQuery(query, Team.class)
+//                    .setFirstResult(0)        // WARN: HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory
+//                    .setMaxResults(1)         // 1:N 컬렉션 Fetch Join 에 Paging 쿼리가 나왔다는말임. applying in memory --> 경고 로그를 남기고 메모리에서 페이징(매우 위험)
+//                    .getResultList();
+
+            // TODO @OneToMany fetch join 을 사용했을 때 --> 주의사항 --> [Solve 1] - @BatchSize(size=100) 사용
+//            entityManager.flush();
+//            entityManager.clear();
+//            String query = "select t from Team t";
+//            List<Team> resultList = entityManager.createQuery(query, Team.class)
+//                    .setFirstResult(0)
+//                    .setMaxResults(2)
+//                    .getResultList();
+//            System.out.println("resultList.size() = " + resultList.size());
+//            for (Team team : resultList) {// TODO Team 과 연관된 LazyLoading 인 Member 초기화할 떄, resultList 에 담긴 Team 을 한번에 IN 쿼리로 100 개 씩 넘기게됨.
+//                System.out.println("team = " + team.getName() + " | members=" + team.getMembers().size());
+//                for (Member member : team.getMembers()) {
+//                    System.out.println("-->  member = " + member);
+//                }
+//            }
+
+            // TODO Fetch Join 과 일반 Join 의 차이
+            // TODO ----- 일반 JOIN -----
+            // 일반 JOIN 은 실행의 결과로 연관된 엔티티를 함꼐 조회하지 않음 (JPQ 의 Select 절에 포함된 엔티티만 퍼올림)
+            // --> JPQL 에서 분명 member 와 조인을 했지만 (Team as t join t.members m), SQL 에서는 select 절에서 Team 엔티티만 갖고옴 (SELECT T.*)
+            // --> 결국 JOIN 문만 SQL 에서 실행되는 것이고, 실제로 데이터를 퍼올리는 것은 select 절 엔티티만 퍼올림.
+//            String query = "select t from Team as t inner join t.members m where t.name = '팀A'";
+//            List<Team> resultList = entityManager.createQuery(query, Team.class).getResultList();
+            // TODO ----- Fetch JOIN -----
+            // JPQL 에서 분명 member 와 fetch join 을 하면, SQL 에서는 select 에 포함된 Team 엔티티뿐만아니라, Member 의 엔티티도 모두 갖고옴 (SELECT T.*, M.*)
+            // --> JOIN 문이 SQL 에서 실행되는 것은 그대로지만, select 절 엔티티인 Team 뿐만아니라, 연관관계 Member 의 엔티티도 모두 퍼올림.
+//            String query = "select t from Team as t inner join fetch t.members";
+//            List<Team> resultList = entityManager.createQuery(query, Team.class).getResultList();
 
             // TODO 엔티티 직접사용
             // --- PK 값 --- (member 를 파라미터 바인딩해도 member 의 id 값으로 조회됨. PK)

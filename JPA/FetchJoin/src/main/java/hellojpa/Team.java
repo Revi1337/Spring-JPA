@@ -1,6 +1,7 @@
 package hellojpa;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ public class Team {
 
     private String name;
 
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "team")
     private List<Member> members = new ArrayList<>();
 

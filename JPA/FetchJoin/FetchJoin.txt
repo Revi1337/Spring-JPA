@@ -1,0 +1,92 @@
+// Fetch join
+1. SQL 조인 종류 X
+2. JPQL 에서 성능최적화를 위해 제공하는 기능
+3. 연관된 엔티티나 컬렉션을 SQL 한번에 함께 조회하는 기능
+4. join fetch 명령어 사용
+
+
+// 엔티티 Fetch Join
+1. 회원을 조회하면서 연관된 팀도 함께 조회 (SQL 한번에)
+2. 생성되는 SQL 을 보면 회원뿐만 아니라, 팀도 함께 select
+
+
+// 단일 Fetch join
+1. N:1, 1:1 관계, Fetch join
+    [JPQL] select m from Member m join fetch m.team                           // select 프로젝션에 Member 의 별칭 m 만 적었는데,
+    [SQL] SELECT M.*, T.* FROM MEMBER M INNER JOIN TEAM T ON M.TEAM_ID=T.ID   // 실행되는 SQL 은 m 의 모든 컬럼과, m.team 의 별칭인 t 의 모든 컬럼이 조회되는 쿼리가 나감
+
+
+// 컬렉션 Fetch Join
+1. 1:N 관계, 컬렉션 Fetch Join
+    [JPQL] select t from Team as t join fetch t.members where t.name = '팀A'
+    [SQL] SELECT T.*, M.* FROM TEAM T INNER JOIN MEMBER M ON T.ID = M.TEAM_ID WHERE T.NAME = '팀A'
+2. N 쪽이 여러개이기 때문에, 조회하는 1 쪽이  늘어나게 됨 --> 1 쪽이 N 쪽의 결과에 맞추기 때문에 row 수가 늘어나게됨 (row 뻥튀기) --> 해결방안으로는 JPQL 에 DISTINCT 추가
+    - JPQL 의 DISTINCT 는 2가지 기능을 제공함 -------> ***** 굉장히 중요한것은 Hibernate 6.0 부터는 기본적으로 엔티티 중복을 제거해주므로 추가해주지 않아도 됨. *****
+        1. SQL 에 DISTINCT 를 추가     : 어짜피 DB 의 결과는 조인된 결과이기떄문에 PK 도 다르고 row 가 일치할 수가 없음. 따라서 DISTINCT 를 써주어도 별 효과가 없음
+        2. 애플리케이션 엔티티 중복 제거   : 영속성컨텍스트에서 식별자(PK) 가 같은 중복 엔티티를 제거함 -------> 굉장히 중요한것은 Hibernate 6.0 부터는 기본적으로 엔티티 중복을 제거해주므로 추가해주지 않아도 됨.
+3. 별도의 설정 없이는 1:N 의 Fetch join 은 페이징이 가능하지 않음. --> (해결방법과 설명은 아래에..)
+
+
+// Fetch Join 과 일반 Join 의 차이
+1.일반 JOIN 은 실행의 결과로 연관된 엔티티를 함꼐 조회하지 않음 (JPQL 의 Select 절에 포함된 엔티티만 퍼올림)
+    [JPQL] select t from Team as t inner join t.members m where t.name = '팀A'
+    [SQL] SELECT T.* FROM Team T Inner Join Member M on T.ID = M.TEAM_ID WHERE T.NAME = '팀A'
+    // JPQL 에서 분명 member 와 조인을 했지만 (Team as t join t.members m), SQL 에서는 select 절에서 Team 엔티티만 갖고옴 (SELECT T.*)
+    --> 결국 JOIN 문만 SQL 에서 실행되는 것이고, 실제로 데이터를 퍼올리는 것은 select 절 엔티티만 퍼올림.
+
+2. Fetch JOIN 은 실행의 결과로 연관된 엔티티를 모두 조회함. (JPQL 의 Select 절에 포함된 엔티티 뿐만아니라, 연관된 엔티티도 모두 Select 에서 퍼올림)
+    [JPQL] select t from Team as t inner join fetch t.members m'
+    [SQL] SELECT T.*, M.* FROM Team T Inner Join Member M on T.ID = M.TEAM_ID
+    // JPQL 에서 분명 member 와 fetch join 을 하면, SQL 에서는 select 에 포함된 Team 엔티티뿐만아니라, Member 의 엔티티도 모두 갖고옴 (SELECT T.*, M.*)
+    --> JOIN 문이 SQL 에서 실행되는 것은 그대로지만, select 절 엔티티인 Team 뿐만아니라, 연관관계 Member 의 엔티티도 모두 퍼올림.
+* 결론
+    ======== 일반 JOIN ========
+    1. JPQL 은 결과를 반환할 떄 연관관계를 고려 X
+    2. 단지 SELECT 절에 지정한 엔티티만 조회할뿐
+    3. 여기서는 Team 만 조회하고, Member 엔티티는 조회 X
+    ======== Fetch JOIN ========
+    1. Fetch Join 을 사용할 때만 연관된 엔티티도 함께 select 절에서 조회 (사실상 즉시로딩이 일어나는것과 같음)
+    2. Fetch Join 은 객체 그래프를 SQL 한번에 조회하는 개념
+
+
+// Fetch Join 의 특징과 한계
+    1. 원칙적으로는 페치 조인 대상에는 별칭을 줄 수 없다. (Hibernate 는 가능, 가급적 사용을 하지않는 것을 권장함)
+        --> Fetch Join 이라는 것 자체가 자신과 연관관 값을 다 끌고오겠다는 의미.
+        --> JPA 설계 사상자체에서 EntityGraph 를 탐색한다는 것은 Team.Members 했을때 Members 가 모두 나온다는 것을 가정하고 설계되어 있음
+        --> 그런데 만약에, Member 를 3개 갖고왔는데, 막 cascade 발라져있으면 지워지거나 이상해질 수 있음. (데이터의 정합성 이슈)
+        --> 따라서 Fetch join 에서 별칭(alias) 는 웬만해서는 쓰면 안됨.
+        * Ex) Member 가 5명인데 Team 과 관련된 Member 3개만 갖고오고싶을때는 --> Team 에서 Member 를 가져오면안되고 --> 처음부터 Member 를 5 개 조회하는 쿼리를 따로 날려야함.
+        --> 유일하게 쓰는 경우는 연관관계 내부 @~ToOne 관계애들도 한번에 갖고오는 경우만 사용함.
+
+    2. 둘 이상의 컬렉션은 Fetch Join 할 수 없다.
+        --> 둘이상의 컬렉션 을 Fetch Join 하면 --> 1:N:N --> 데이터 뻥튀기 --> 정합성 이슈
+        * 1:N 도 row 수가 늘어 뻥튀기가 되는데, 1:N:N 은 상상 가능? ㅋㅋ
+        * 딱, 1:N (컬렉션) Fetch join 으로 만족하자
+
+    3. 컬렉션을 페치 조인하면 페이징 API (setFirstResult, setMaxResult) 를 사용할 수 없다.
+        --> 페이징이라는 것은 철저하게 DB 중심적이고 row 수를 어떻게 줄일까를 고민해야함. --> 하지만 1:N 컬렉션 Fetch Join 의 결과로 DB 에는 이미 row 수가 뻥튀기 되어있기 때문어 페이징하면 데이터가 잘림.
+        --> 1:1, N:1 같은 @~ToOne 시리즈 같은 단일 값 연관 필드들은 Fetch join 해도 페이징 가능!! --> DB 에 데이터뻥튀기가 안되기 때문 --> 페이징 지장 X
+        --> 하지만 1:N(컬렉션)을 Fetch Join 을 하면 --> 데이터뻥튀기가됨 --> 페이징에 지장 O --> 페이징은 성능최적화를 위해 DB 에서 수행하는데, DB 에는 이미 row 가 늘어나있음.
+            * Hibernate 는 경고 로그를 남기고 메모리에서 페이징함 (매우 위험)
+            --> [방법 1]. 이놈을 해결하려면 뒤집에서 생각해야함. (Ex) 1:N 컬렉션 fetch join 이 아닌, N:1 단일 fetch join 으로 해결해야함.)
+                : select t from Team as t inner join fetch t.members m (X) --> 페이징 문제
+                : select m from Member as m inner join fetch m.team t (O)  --> 페이징 문제 이상 X
+            --> [방법 2]. @BatchSize 이용
+                        문제 1. join --> N + 1 문제 발생
+                        문제 2. fetch join --> 페이징 불가
+                        결국. BatchSize 사용 --> 해결
+                1. BatchSize 설정  (개별설정인 @BatchSize 혹은 글로벌설정 방법이 있음.)
+                2. fetch join 을 뺴고 쿼리실행 (select t from Team t)
+            --> [방법 3]. new 오퍼레이션을 사용해서 DTO 로 뽑는 방법
+
+
+// Fetch Join 정리
+    1. 연관된 엔티티들을 SQL 한번으로 조회 - 성능 최적화
+    2. 엔티티에 직접 적용하는 글로벌 로딩 전략보다 우선함 (fetch join 쿼리가 FetchType.LAZY 보다 수행된다는 것임.)
+        : @OneToMany(fetch=FetchType.LAZY)          // 글로벌 로딩 전략
+    3. 실무에서 글로벌 로딩 전략은 모두 지연 로딩
+    4. 최적화가 필요한 곳은 Fetch Join 적용
+    5. 모든 것을 Fetch Join 으로 해결할 수는 없음
+    6. Fetch Join 은 객체 그래프를 유지할 때 사용하면 효과적
+    7. 여러 테이블에 조인해서 엔티티가 가진 모양이 아닌 전혀 다른 결과를 내야 하면, Fetch Join 보다는 일반 조인을 사용하고 필요한 데이터들만 조회해서
+       DTO 로 반환하는 것이 효과적임.`
