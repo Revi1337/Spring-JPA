@@ -22,14 +22,41 @@
 - @OneToOne, @OneToMany 만 사용 가능. (연쇄적인 기능이니까 당연히 1:N 이 맞겠지?)
 - 참고 : 개념적으로 부모를 제거하면 자식은 고아가 됨. 따라서 고아 객체 제거 기능을 활성화하면, 부모를 제거할떄 자식도 함께 제거됨. 이것은 CascadeType.REMOVE 처럼 동작함.
 
-***** 비교 *****
-orphanRemoval = true : 부모가 지워질때, 자식도 같이지워짐.
-cascade = CascadeType.ALL : 부모가 지워질떄, 자식도 같이 지워짐.
-orphanRemoval = true, cascade = CascadeType.ALL 둘다 사용시 : 부모를 지우면 자식도 지워지고, 자식을 지우면 자식만 지워짐.
-***************
+**********************************  비교  *****************************************
+@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+			--> em.remove(findParent); 	                (부모를 삭제했을 때 자식들도 delete)
+			--> findParent.getChildList().remove(0);    ({연관관계를 통해 자식을 지울때 = 부모엔티티와 연관관계가 끊어진 자식 엔티티} 는 해당 X)
+
+@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+			--> em.remove(findParent); 	                (부모를 삭제했을 때 자식들도 delete)
+			--> findParent.getChildList().remove(0);    (연관관계를 통해 자식을 지워도 delete)
+
+@OneToMany(mappedBy = "parent", cascade = CascadeType.PERSIST)
+			--> em.remove(findParent);	                (부모를 삭제해도 자식삭제 X --> 익셉션)
+			--> findParent.getChildList().remove(0);    (연관관계를 통해 자식을 지워도 delete X)
+
+@OneToMany(mappedBy = "parent", cascade = CascadeType.PERSIST, orphanRemoval = true)
+			--> em.remove(findParent);	                (부모를 삭제했을때 자식들도 delete)
+			                 참고: 개념적으로 부모를 제거하면 자식은 고아가 된다. 따라서 고아 객체 제거 기능을 활성화 하면,
+               			     부모를 제거할 때 자식도 함께 제거된다. 이것은 CascadeType.REMOVE 처럼 동작한다.
+			--> findParent.getChildList().remove(0);    (연관관계를 통해 자식을 지워도 delete)
+
+
+
+////////////////////////////// 결론 //////////////////////////////
+1. orphanRemoval = true             역할    :   em.remove(findParent);                   (부모가 지워질때 부모와 관련된 자식들도 Delete 됨.)
+                                                                                        (개념적으로 부모를 제거하면 자식은 고아가 됨. 따라서 고아 객체 제거 기능을 활성화 하면,
+                                                                                         부모를 제거할 때 자식도 함께 제거되는것. 이것은 CascadeType.REMOVE 처럼 동작한다.)
+                                           :   findParent.getChildList().remove(0);     (연관관계를 통해 자식을 지워도 Delete 됨)
+
+
+2. cascade = CascadeType.ALL       역할    :   em.remove(findParent);                   (부모가 지워질때 부모와 관련된 자식들도 Delete 됨.)
+   cascade = CascadeType.REMOVE           :   findParent.getChildList().remove(0);     (연관관계를 통해 자식을 지워도 Delete 되지않음.)
 
 
 // 영속성전이(Cascade) 와 고아객체를 같이사용했을 시
 - 일반적으로 스스로 생명주기를 관리하는 엔티티는 em.persist() 로 영속화, em.remove() 로 제거함.
 - CascadeType.ALL  +  orphanRemoval = true 를 둘다사용하면 부모(Parent) 엔티티를 통해서 자식의 생명주기를 관리할 수 있음.
 - Domain 주도설계(DDD)의 Aggregate Root 개념을 구현할때 유용함.
+***********************************************************************************
+
