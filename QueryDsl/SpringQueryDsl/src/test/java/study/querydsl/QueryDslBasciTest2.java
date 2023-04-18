@@ -372,5 +372,58 @@ public class QueryDslBasciTest2 {
                 .fetchOne();
         assertThat(emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam())).isTrue();
     }
-    
+
+    @Test
+    @DisplayName(value = "서브쿼리 - 나이가 가장 많은 회원을 조회 (메인쿼리의 member 와 서브쿼리의 member 의 Alias 가 겹치면안되기 때문에, 서브쿼리의 alias 를 생성)")
+    public void subQuery1() {
+        QMember memberSub = new QMember("memberSub");
+        List<Member> result = query
+                .selectFrom(member)
+                .where(member.age.eq(
+                        JPAExpressions.select(memberSub.age.min())
+                                .from(memberSub)))
+                .fetch();
+        assertThat(result).extracting("age").containsExactly(10);
+    }
+
+    @Test
+    @DisplayName(value = "서브쿼리 - 나이가 평균 이상인 회원 (메인쿼리의 member 와 서브쿼리의 member 의 Alias 가 겹치면안되기 때문에, 서브쿼리의 alias 를 생성)")
+    public void subQuery2() {
+        QMember memberSub = new QMember("memberSub");
+        List<Member> result = query
+                .selectFrom(member)
+                .where(member.age.gt(
+                        JPAExpressions.select(memberSub.age.avg())
+                                .from(memberSub)))
+                .fetch();
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result).extracting("age").containsExactly(30, 40);
+    }
+
+    @Test
+    @DisplayName(value = "서브쿼리 - (select 절에도 서브쿼리가 가능하다 --> 하지만 from 절의 서브쿼리는 불가능하다.)")
+    public void subQuery3() {
+        QMember memberSub = new QMember("memberSub");
+        List<Tuple> fetch = query
+                .select(member.username,
+                        JPAExpressions.select(memberSub.age.avg())
+                                .from(memberSub))
+                .from(member)
+                .fetch();
+        for (Tuple tuple : fetch) {
+            System.out.println("tuple = " + tuple);
+        }
+
+//        from 절의 서브쿼리 한계
+//        JPA JPQL 서브쿼리의 한계점으로 from 절의 서브쿼리(인라인 뷰)는 지원하지 않는다. 당연히 Querydsl
+//        도 지원하지 않는다. 하이버네이트 구현체를 사용하면 select 절의 서브쿼리는 지원한다. Querydsl도
+//        하이버네이트 구현체를 사용하면 select 절의 서브쿼리를 지원한다.
+//                -- from 절의 서브쿼리 해결방안 --
+//        1. 서브쿼리를 join 으로 변경한다. (가능한 상황도 있고, 불가능한 상황도 있다.)
+//        2. 애플리케이션에서 쿼리를 2번 분리해서 실행한다.
+//        3. nativeSQL 을 사용한다
+    }
+
+
+
 }
