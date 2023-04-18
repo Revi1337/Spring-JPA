@@ -483,4 +483,36 @@ public class QueryDslBasciTest2 {
         }
     }
 
+    @Test
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션 대상이 하나 --> select 절에 단일 타입 --> 타입을 명확하게 지정 가능)")
+    public void projection1() {
+        // 프로젝션은 보통 select 절에 무엇을 가져올지 대상을 지정하는것을 의미한다.
+        List<String> fetch = query
+                .select(member.username)
+                .from(member)
+                .fetch();
+        for (String s : fetch) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> 튜플이나 DTO 로 조회해야 한다.)")
+    public void projection2() {
+        List<Tuple> result = query
+                .select(member.username, member.age)
+                .from(member)
+                .fetch();
+        for (Tuple tuple : result) {                                            // Tuple 을 출력할때는 그냥 이터로 돌려도 되고
+            System.out.println("tuple = " + tuple);
+        }
+
+        for (Tuple tuple : result) {
+            String username = tuple.get(member.username);                       // 프로젝션에 넣었던 값 그대로 꺼낼 수 있다.
+            Integer age = tuple.get(member.age);
+            System.out.print("username = " + username + ", ");
+            System.out.println("age = " + age);
+        }
+    }
+
 }
