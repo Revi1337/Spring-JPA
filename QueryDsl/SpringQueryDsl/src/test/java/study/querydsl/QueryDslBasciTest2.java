@@ -2,6 +2,7 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
+import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
 import study.querydsl.entity.Team;
@@ -497,7 +500,7 @@ public class QueryDslBasciTest2 {
     }
 
     @Test
-    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> 튜플이나 DTO 로 조회해야 한다.)")
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> 튜플로 반환.)")
     public void projection2() {
         List<Tuple> result = query
                 .select(member.username, member.age)
@@ -513,6 +516,87 @@ public class QueryDslBasciTest2 {
             System.out.print("username = " + username + ", ");
             System.out.println("age = " + age);
         }
+    }
+
+    @Test
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> DTO 로 반환. (순수 JPQL 구현))")
+    public void projectionPureJPQLDTO() {
+        // 순수 JPQL 구현 (생성자 방식만 지원)
+        List<MemberDto> result = em.createQuery(
+                        "select new study.querydsl.dto.MemberDto(m.username, m.age) " +
+                                "from Member m", MemberDto.class)
+                .getResultList();
+    }
+
+    // QueryDsl 에서 결과를 DTO 로 반환할때는 3가지 방법을 지원
+//    1. 프로퍼티 접근
+//    2. 필드 직접 접근
+//    3. 생성자 사용
+
+    @Test
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> DTO 로 반환. --> 1. QueryDsl 에서 DTO 의 프로퍼티(세터) 로 결과 조회")
+    public void queryDslProjectionDTOBySetter() {
+        // DTO 에 기본생성자, 셋터가 꼭필요함. --> QueryDsl 이 기본생성자로 인스턴스를 만들고 setter 를 호출하기 때문
+        List<MemberDto> result = query
+                .select(Projections.bean(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+    }
+
+    @Test
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> DTO 로 반환. --> 2. QueryDsl 에서 DTO 의 필드에 직접 접근하여 결과 조회")
+    public void queryDslProjectionDTOByField() {
+        // DTO 에 기본생성자는 필요 --> 겟터, 셋터 없어도 필드에다가 다이렉트로 넣어줌.
+        List<MemberDto> result = query
+                .select(Projections.fields(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+    }
+
+    @Test
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> DTO 로 반환. --> 3. QueryDsl 에서 DTO 의 생성자에 직접 접근하여 결과 조회")
+    public void queryDslProjectionDTOByConstructor() {
+        // 순수 JPQL 로 DTO 를 받을때처럼 DTO 에 username 와 age 필드만 들어가는 생성자가 필요 --> 기본생성자가 없어도 됨.
+        List<MemberDto> result = query
+                .select(Projections.constructor(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+    }
+
+    @Test
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> DTO 로 반환 --> DTO 의 필드와, 프로젝션의 Alias 가 맞지 않으면 안됨")
+    public void projectionIssueAlias1() {
+        // UserDto 의 필드이름은 name, 하지만, 프로젝션에서는 username 을 사용중 --> Alias 가 맞지않음 -->
+        // 익셉션이 터지지는 않고, UserDto 의 name 필드에 null 이 들어가게된다.
+        // TODO 버전이 올라가면서 DTO 의 age 필드가 프로젝션의 age 와 동일하기때문에, 나머지 username 프로젝션은 DTO 의 필드와 동일하지 않아도 알아서 채워주는 것 같다.
+        List<UserDto> issue = query
+                .select(Projections.constructor(UserDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+        for (UserDto userDto : issue) {
+            System.out.println("userDto = " + userDto);
+        }
+
+
+        // TODO 정석적인 해결방법으로는 .as() 를 붙여주어 DTO 의 필드명과, 프로젝션의 alias 를 동일하게 매칭시켜주어야한다.
+        List<UserDto> solution = query
+                .select(Projections.constructor(UserDto.class,
+                        member.username.as("name"),
+                        member.age))
+                .from(member)
+                .fetch();
+        for (UserDto userDto : solution) {
+            System.out.println("userDto = " + userDto);
+        }
+
     }
 
 }
