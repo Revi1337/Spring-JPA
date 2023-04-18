@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
 import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -597,6 +598,27 @@ public class QueryDslBasciTest2 {
             System.out.println("userDto = " + userDto);
         }
 
+    }
+
+    @Test
+    @DisplayName(value = "프로젝션과 결과 반환 (프로젝션이 둘 이상 --> DTO 로 반환 --> DTO 의 생성자에 @QueryProjection 사용")
+    public void queryProjection() {
+        // ㅋㅋ 아 개어이없네. ㅋㅋㅋㅋ 반환받을 DTO 에 @QueryProjection 를 설정해주면 Q 클래스를 만들어준다.
+        // 생성된 Q 클래스타입의 DTO 로 결과를 받아주면 그게 끝이다. ㅋㅋㅋ -> 생성자를 그대로 가져가기떄문에 굉장히 안정적임.
+        // 컴파일 시점에 타입이 오류를 잡아주는 장점까지~ ㅋㅋ 개사기 진짜 ㅋㅋ
+        List<MemberDto> fetch = query
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch();
+        for (MemberDto memberDto : fetch) {
+            System.out.println("memberDto = " + memberDto);
+        }
+
+        // TODO @QueryProjection 와 Projection.constructor() 둘다 생성자를 이용하는데 뭐가 다를까?
+        //  @QueryProjection 는 새로운 Q 클래스가 생기기때문에 매개변수를 더 넣어도 컴파일시점에 오류를 잡아줌.
+        //  하지만 Projection.constructor() 는 매개변수를 더 넣으면 컴파일시점에 오류를 잡지 못하고 런타임에 오류가 남.
+        //  이렇게 들어보면 @QueryProjection 가 더 좋은건사실이지만, DTO 는 결국 QueryDsl 에 대한 의존성을 갖게되어 아키텍쳐에 이슈가 생김
+        //  결국 DTO 는 API 로 나가게되거나 서비스나 컨트롤러에서 사용할텐데, QueryDsl 에 의존적이기 떄문에 순수하지않은 DTO 가 되버리는것임
     }
 
 }
