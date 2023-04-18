@@ -3,6 +3,7 @@ package study.querydsl;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.*;
@@ -455,4 +456,31 @@ public class QueryDslBasciTest2 {
             System.out.println("s = " + s);
         }
     }
+
+    @Test
+    @DisplayName(value = "상수 문자 더하기 (1)")
+    public void constant1() {
+        List<Tuple> result = query
+                .select(member.username, Expressions.constant("A"))
+                .from(member)
+                .fetch();
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
+
+    @Test
+    @DisplayName(value = "상수 문자 더하기 (2) --> stringValue() 가 중요한데, 문자가 아닌 타입들을 문자로 변환할 수 있다. 이방법은 ENUM 을 처리할때도 자주 사용한다.")
+    public void constant2() {
+        // {username}_{age}
+        List<String> result = query
+                .select(member.username.concat("_").concat(member.age.stringValue()))
+                .from(member)
+                .where(member.username.eq("member1"))
+                .fetch();
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+    }
+
 }
