@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static study.querydsl.entity.QMember.*;
 import static study.querydsl.entity.QTeam.team;
 
-@SpringBootTest @Transactional @Commit
+@SpringBootTest @Transactional
 public class QueryDslBasciTest2 {
 
     @PersistenceContext EntityManager em;
@@ -672,5 +672,57 @@ public class QueryDslBasciTest2 {
     }
     private BooleanExpression allEq(String usernameCond, Integer ageCond) {
         return usernameEq(usernameCond).and(ageEqual(ageCond));
+    }
+
+//    @Commit
+    @Test
+    @DisplayName(value =
+            "Bulk 연산 - 당연히 JPA 에서 배운것처럼 영속성컨텍스트에 값을 저장하지않고 DB 에만 반영하기때문에, DB 와 영속성컨텍스트의 값이 동일하지 않음. 이것도 문젠데 더큰문제는 이후임" +
+            "벌크연산 날리고 JPQL 이나 QueryDsl 로 조회를하게되면 무조건 DB 에 SQL 이 나가 결과값을 영속성컨텍스트에 저장을 하게되는데, 이때 영속성컨텍스트에 이미 값이 존재하면, " +
+            "DB 에서 갖고온 데이터를 영속성컨텍스트에 저장하지않고 누락시켜버림. 따라서 Bulk 연산되기 전의 데이터를 영속성컨텍스트에서 갖고오게됨." +
+            "** 그냥 해결방법으로는 순수 JPA 처럼 영속성컨텍스트에 있는 것들을 flush 해서 DB 랑 데이터를 맞추고, clear 로 영속성컨텍스트를 비워주면 됨.")
+    public void test() {
+        long count = query
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+//        em.flush();
+//        em.clear();
+
+        List<Member> result = query
+                .selectFrom(member)
+                .fetch();
+        for (Member member1 : result) {
+            System.out.println("member1 = " + member1);
+        }
+    }
+
+    @Test
+    @DisplayName(value = "모든 회원의 나이를 1 더해서 수정해")
+    public void bulkAdd() {
+        long count = query
+                .update(member)
+                .set(member.age, member.age.multiply(1))
+                .execute();
+    }
+
+    @Test
+    @DisplayName(value = "모든 회원의 나이를 2 곱해서 수정해")
+    public void bulkMultiply() {
+        long count = query
+                .update(member)
+                .set(member.age, member.age.multiply(1))
+                .execute();
+    }
+
+    @Test
+    @DisplayName(value = "특정 모두 지우기")
+    public void bulkDelete() {
+        long count = query
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
     }
 }
