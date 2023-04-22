@@ -725,4 +725,32 @@ public class QueryDslBasciTest2 {
                 .where(member.age.gt(18))
                 .execute();
     }
+
+    // SQL Function 은 JPA 와 같이 Dialect 에 등록된 내용만 호출할 수 있다.
+    @Test
+    @DisplayName(value = "SQL Function 사용. --> member 라는 단어를 M 으로 변경 --> String 을 바꾸는거라 stringTemplate 사용")
+    public void sqlFunction() {
+        List<String> result = query
+                .select(
+                        Expressions.stringTemplate(
+                                "function('replace', {0}, {1}, {2})",
+                                member.username, "member", "M"))
+                .from(member)
+                .fetch();
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    @DisplayName(value = "")
+    public void sqlFunction2() {
+        List<String> result = query
+                .select(member.username)
+                .from(member)
+                // .where(member.username.eq(Expressions.stringTemplate("function('lower', {0})", member.username)))
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+        System.out.println("result = " + result);
+    }
 }
