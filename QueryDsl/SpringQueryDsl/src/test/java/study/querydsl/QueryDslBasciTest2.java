@@ -1,8 +1,11 @@
 package study.querydsl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -621,4 +624,53 @@ public class QueryDslBasciTest2 {
         //  결국 DTO 는 API 로 나가게되거나 서비스나 컨트롤러에서 사용할텐데, QueryDsl 에 의존적이기 떄문에 순수하지않은 DTO 가 되버리는것임
     }
 
+    // 동적쿼리를 해결하는 두가지 방식
+    // 1. BooleanBuilder
+    // 2. where 다중 파라미터 사용
+    @Test
+    @DisplayName(value = "동적쿼리를 해결하는 첫번째 방법 [BooleanBuilder]")
+    public void dynamicQuery_BooleanBuilder() {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+        List<Member> result = searchMember1(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+    private List<Member> searchMember1(String usernameCond, Integer ageCond) {
+        BooleanBuilder builder = new BooleanBuilder();
+        if (usernameCond != null) {                                                 // null 이면 where 문에 조건이 들어가지않음
+            builder.and(member.username.eq(usernameCond));
+        }
+        if (ageCond != null) {                                                      // null 이 아니면 where 조건에 들어감
+            builder.and(member.age.eq(ageCond));
+        }
+        return query
+                .selectFrom(member)
+                .where(builder)                                                     // where 전에 생성한 BooleanBuilder 가 들어간다.
+                .fetch();
+    }
+
+    @Test
+    @DisplayName(value = "동적쿼리를 해결하는 첫번째 방법 [where 문에 다중 파라미터 --> 실무에서 많이 사용 --> 기가막힌것은 조건을 조립할수가 있다는 것임.]")
+    public void dynamicQuery_MultipleParameter() {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+        List<Member> result = searchMember2(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+    private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+        return query
+                .selectFrom(member)
+//                .where(usernameEq(usernameCond), ageEqual(ageCond))           // 두개의 조건을 함수로 뺴서 Where 절에 넣어도되고 (where 절에 null 값은 무시된다.)
+                .where(allEq(usernameCond, ageCond))                            // 그 두개의 함수를 또 다른함수로 뺴서 하나의 조건을 넣어주어도된다. --> 조건들이 함수로 빠졌기때문에 재사용이 가능 --> 개쩜ㅋㅋㅋ
+                .fetch();
+    }
+    private BooleanExpression usernameEq(String usernameCond) {
+        return usernameCond != null ? member.username.eq(usernameCond) : null;
+    }
+    private BooleanExpression ageEqual(Integer ageCond) {
+        return ageCond != null ? member.age.eq(ageCond) : null;
+    }
+    private BooleanExpression allEq(String usernameCond, Integer ageCond) {
+        return usernameEq(usernameCond).and(ageEqual(ageCond));
+    }
 }
