@@ -87,4 +87,30 @@ class MemberRepositoryTest {
         assertThat(result).extracting("username").containsExactly("member4");
     }
 
+    @Test
+    @DisplayName(value = "동적 쿼리와 성능 최적화 조회 (Where 절 다중 파라미터 사용)")
+    public void searchWhereMulipleParams() {
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        entityManager.persist(teamA);
+        entityManager.persist(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 20, teamA);
+        Member member3 = new Member("member3", 30, teamB);
+        Member member4 = new Member("member4", 40, teamB);
+        entityManager.persist(member1);
+        entityManager.persist(member2);
+        entityManager.persist(member3);
+        entityManager.persist(member4);
+
+        MemberSearchCondition memberSearchCondition = new MemberSearchCondition();
+        memberSearchCondition.setAgeGoe(35);
+        memberSearchCondition.setAgeLoe(40);
+        memberSearchCondition.setTeamName("teamB");
+
+        List<MemberTeamDto> result = memberQueryDslRepository.search(memberSearchCondition);
+        assertThat(result).extracting("username").containsExactly("member4");
+    }
+
 }
