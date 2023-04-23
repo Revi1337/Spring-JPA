@@ -1,6 +1,10 @@
 package com.example.jpawithquerydsl.repository;
 
+import com.example.jpawithquerydsl.dto.MemberSearchCondition;
+import com.example.jpawithquerydsl.dto.MemberTeamDto;
 import com.example.jpawithquerydsl.entity.Member;
+import com.example.jpawithquerydsl.entity.Team;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +22,16 @@ class MemberRepositoryTest {
 
     private final MemberQueryDslRepository memberQueryDslRepository;
 
+    private final EntityManager entityManager;
+
     @Autowired
     public MemberRepositoryTest(
-            MemberJpaRepository memberJpaRepository, MemberQueryDslRepository memberQueryDslRepository) {
+            MemberJpaRepository memberJpaRepository,
+            MemberQueryDslRepository memberQueryDslRepository,
+            EntityManager entityManager) {
         this.memberJpaRepository = memberJpaRepository;
         this.memberQueryDslRepository = memberQueryDslRepository;
+        this.entityManager = entityManager;
     }
 
     @Test
@@ -50,6 +59,32 @@ class MemberRepositoryTest {
 
         List<Member> findByUsername = memberQueryDslRepository.findByUsername("member1");
         assertThat(findByUsername).extracting("username").containsExactly("member1");
+    }
+
+    @Test
+    @DisplayName(value = "동적 쿼리와 성능 최적화 조회 (Builder 사용)")
+    public void searchTest() {
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        entityManager.persist(teamA);
+        entityManager.persist(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 20, teamA);
+        Member member3 = new Member("member3", 30, teamB);
+        Member member4 = new Member("member4", 40, teamB);
+        entityManager.persist(member1);
+        entityManager.persist(member2);
+        entityManager.persist(member3);
+        entityManager.persist(member4);
+
+        MemberSearchCondition memberSearchCondition = new MemberSearchCondition();
+        memberSearchCondition.setAgeGoe(35);
+        memberSearchCondition.setAgeLoe(40);
+        memberSearchCondition.setTeamName("teamB");
+
+        List<MemberTeamDto> result = memberQueryDslRepository.searchByBuilder(memberSearchCondition);
+        assertThat(result).extracting("username").containsExactly("member4");
     }
 
 }
