@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class MemberRepositoryImpl implements MemberRepositoryCustom{
+public class MemberRepositoryCustomImpl implements MemberRepositoryCustom{
 
     private final EntityManager em;
 
