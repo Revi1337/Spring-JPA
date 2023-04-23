@@ -34,7 +34,7 @@ public class MemberController {
         return member.getUsername();
     }
 
-    @GetMapping(value = "/members")
+    @GetMapping(value = "/members") // /members?page=1&size=3&sort=id,desc
     public Page<MemberDto> list(Pageable pageable) {
 //        Page<Member> page = memberRepository.findAll(pageable);
 //        Page<MemberDto> memberDto = page.map(member -> new MemberDto(member.getId(), member.getUsername(), null));
